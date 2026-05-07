@@ -17,8 +17,6 @@
 @section('content_top_nav_right')
     <link href="{{ asset('css/toastr.min.css') }}" type="text/css" rel="stylesheet" />
 
-
-
     <li class="nav-item dropdown">
         <a href="#" class="nav-link" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
             <i class="fas fa-cogs"></i>
@@ -158,12 +156,7 @@
     <script src="{{ asset('js/toastr.min.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/axios.min.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/alertaPersonalizada.js') }}"></script>
-
-
-
     <script src="{{ asset('js/theme.js') }}"></script>
-
-
 
     <script>
         $(document).ready(function () {

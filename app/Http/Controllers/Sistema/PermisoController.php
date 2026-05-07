@@ -34,10 +34,10 @@ class PermisoController extends Controller
         $u->nombre = $request->nombre;
         $u->usuario = $request->usuario;
         $u->password = bcrypt($request->password);
-        $u->activo = 1;
 
         if ($u->save()) {
-            $u->assignRole($request->rol);
+            $role = Role::findById($request->rol, 'web');
+            $u->assignRole($role);
             return ['success' => 2];
         } else {
             return ['success' => 3];
@@ -73,16 +73,14 @@ class PermisoController extends Controller
             $usuario = Usuario::find($request->id);
             $usuario->nombre = $request->nombre;
             $usuario->usuario = $request->usuario;
-            $usuario->activo = $request->toggle;
 
             if($request->password != null){
                 $usuario->password = bcrypt($request->password);
             }
 
-            //$usuario->assignRole($request->rol); asigna un rol extra
-
-            //elimina el rol existente y agrega el nuevo.
-            $usuario->syncRoles($request->rol);
+            // Buscar el rol con el guard correcto y sincronizar
+            $role = Role::findById($request->rol, 'web');
+            $usuario->syncRoles($role);
 
             $usuario->save();
 

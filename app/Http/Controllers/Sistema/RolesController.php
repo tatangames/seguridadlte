@@ -71,10 +71,8 @@ class RolesController extends Controller
 
     public function borrarRolGlobal(Request $request){
 
-        // buscar el rol por id
-        $role = Role::findById($request->idrol);
+        $role = Role::findById($request->idrol, 'web');
 
-        // elimina el rol y todos los permisos asociados
         $role->delete();
 
         return ['success' => 1];

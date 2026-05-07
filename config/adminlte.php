@@ -309,7 +309,7 @@ return [
         [
             'text'    => 'Roles y Permisos',
             'icon'    => 'fas fa-pen-alt',
-            'can'     => 'admin.sidebar.roles.y.permisos',
+            'can'     => 'sidebar.roles.y.permisos',
             'submenu' => [
                 [
                     'text' => 'Roles',
@@ -324,15 +324,29 @@ return [
             ],
         ],
 
+
         [
-            'text'  => 'Empleados',
-            'icon'  => 'fas fa-file-alt',
-            'route' => 'admin.empleados.index',
-            'can'   => 'rrhh.sidebar.dashboard',
+            'text'    => 'Inventario',
+            'icon'    => 'fas fa-pen-alt',
+            'can'     => 'sidebar.inventario',
+            'submenu' => [
+                [
+                    'text' => 'Unidad de Medida',
+                    'icon' => 'far fa-circle',
+                    'route' => 'admin.unidadmedida.index',
+                ],
+                [
+                    'text' => 'Inventario',
+                    'icon' => 'far fa-circle',
+                    'route' => 'admin.materiales.index',
+                ],
+                [
+                    'text' => 'Lista de Proyectos',
+                    'icon' => 'far fa-circle',
+                    'route' => 'admin.tiposproyecto.index',
+                ],
+            ],
         ],
-
-
-
 
 
 

@@ -18,6 +18,11 @@ class LoginController extends Controller
     }
 
     public function vistaLoginForm(){
+
+        if (auth()->check()) {
+            return redirect()->route('admin.panel');
+        }
+
         return view('frontend.login.vistalogin');
     }
 
