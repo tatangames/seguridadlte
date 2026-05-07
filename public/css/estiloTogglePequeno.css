@@ -1,0 +1,88 @@
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 35px;
+    height: 20px;
+
+}
+
+.switch input {display:none;}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #675d5d;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+/* POSICION DE PUNTO REDONDO */
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 2px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: #2ab934;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+
+/* DISTANCIA A LA DERECHA CUANTO DEBE MOVERSE */
+input:checked + .slider:before {
+    -webkit-transform: translateX(13px);
+    -ms-transform: translateX(13px);
+    transform: translateX(13px);
+}
+
+/*------ ADDED CSS ---------*/
+.on
+{
+    display: none;
+}
+
+.on, .off
+{
+    color: white;
+    position: absolute;
+    transform: translate(-50%,-50%);
+    top: 50%;
+    left: 50%;
+    font-size: 5px;
+    font-family: Verdana, sans-serif;
+}
+
+input:checked+ .slider .on
+{display: block;}
+
+input:checked + .slider .off
+{display: none;}
+
+
+
+
+
+
+/*--------- END --------*/
+
+/* Rounded sliders BORDE DEL FONDO */
+.slider.round {
+    border-radius: 34px;
+}
+
+/* BORDE DEL CIRCULO BLANCO*/
+.slider.round:before {
+    border-radius: 50%;}
