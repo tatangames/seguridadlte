@@ -19,7 +19,7 @@ Route::get('/', [LoginController::class,'vistaLoginForm'])->name('login.admin');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('admin.logout');
 
-//Route::middleware('auth:admin')->group(function () {
+Route::middleware('auth:admin')->group(function () {
 
     // --- ROLES ---
     Route::get('/admin/roles/index', [RolesController::class,'index'])->name('admin.roles.index');
@@ -162,7 +162,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('admin.logout')
 
 
 
-//}); // end auth
+}); // end auth
 
 
 

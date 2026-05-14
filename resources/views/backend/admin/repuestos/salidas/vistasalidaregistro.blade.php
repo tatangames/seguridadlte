@@ -416,7 +416,12 @@
                 seguroBuscador = false;
                 var row   = $(e).closest('tr');
                 var texto = e.value;
-                axios.post(urlAdmin + '/admin/buscar/material/disponible', { 'query': texto })
+                var idProyecto = $('#select-proyecto').val(); // 👈 tomar el proyecto seleccionado
+
+                axios.post(urlAdmin + '/admin/buscar/material/disponible', {
+                    'query': texto,
+                    'id_proyecto': idProyecto  // 👈 enviarlo
+                })
                     .then((response) => {
                         seguroBuscador = true;
                         $(row).each(function () {
@@ -433,6 +438,7 @@
             openLoading();
             var formData = new FormData();
             formData.append('id', edrop.id);
+            formData.append('id_proyecto', $('#select-proyecto').val()); // 👈
             $("#matrizM tbody tr").remove();
 
             axios.post(urlAdmin + '/admin/buscar/material/disponibilidad', formData)
@@ -535,7 +541,8 @@
             $('#modalCantidad').modal('hide');
             document.getElementById('inputBuscador').value = '';
 
-            Swal.fire({ position: 'center', icon: 'success', title: 'Agregado al Detalle', showConfirmButton: false, timer: 1500 });
+            toastr.success("Agregado")
+            //Swal.fire({ position: 'center', icon: 'success', title: 'Agregado al Detalle', showConfirmButton: false, timer: 1500 });
         }
 
         // ── Preguntar antes de guardar ────────────────────────────────────

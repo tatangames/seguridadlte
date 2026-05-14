@@ -14,6 +14,8 @@
 
 @section('content_top_nav_right')
     <link href="{{ asset('css/toastr.min.css') }}" type="text/css" rel="stylesheet"/>
+    <link href="{{ asset('css/select2.min.css') }}" type="text/css" rel="stylesheet">
+    <link href="{{ asset('css/select2-bootstrap-5-theme.min.css') }}" type="text/css" rel="stylesheet">
 
     <li class="nav-item dropdown">
         <a href="#" class="nav-link" data-toggle="dropdown">
@@ -40,6 +42,51 @@
 
 @section('content')
     <div id="divcontenedor">
+
+        {{-- ══ FILTROS ══ --}}
+        <section class="content" style="margin-bottom:0">
+            <div class="container-fluid">
+                <div class="card card-blue">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-filter mr-1"></i> Filtros</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-end">
+                            <div class="col-md-4">
+                                <label class="font-weight-bold">Proyecto</label>
+                                <select class="form-control" id="filtro-proyecto">
+                                    <option value="">— Todos —</option>
+                                    @foreach($arrayProyectos as $p)
+                                        <option value="{{ $p->id }}"
+                                                data-cerrado="{{ $p->transferido ? '1' : '0' }}">
+                                            {{ $p->nombre }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="font-weight-bold">Fecha desde</label>
+                                <input type="date" class="form-control" id="filtro-fecha-desde">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="font-weight-bold">Fecha hasta</label>
+                                <input type="date" class="form-control" id="filtro-fecha-hasta">
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary btn-block mb-1" onclick="recargar()">
+                                    <i class="fas fa-search mr-1"></i> Filtrar
+                                </button>
+                                <button class="btn btn-secondary btn-block" onclick="limpiarFiltros()">
+                                    <i class="fas fa-times mr-1"></i> Limpiar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {{-- ══ TABLA ══ --}}
         <section class="content">
             <div class="container-fluid">
                 <div class="card card-blue">
@@ -194,11 +241,41 @@
     <script src="{{ asset('js/toastr.min.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/axios.min.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/alertaPersonalizada.js') }}"></script>
+    <script src="{{ asset('js/select2.min.js') }}" type="text/javascript"></script>
 
     <script>
         $(function () {
             const ruta = "{{ url('/admin/historial/entradas/tabla') }}";
 
+            // ── Select2 con badge de estado ───────────────────────
+            $('#filtro-proyecto').select2({
+                theme: 'bootstrap-5',
+                placeholder: '— Todos —',
+                allowClear: true,
+                language: { noResults: function () { return 'No encontrado'; } },
+                templateResult: function (data) {
+                    if (!data.id) return data.text;
+                    var cerrado = $(data.element).data('cerrado') === '1';
+                    return $('<span class="d-flex align-items-center justify-content-between">')
+                        .append($('<span>').text(data.text))
+                        .append($('<span>')
+                            .addClass(cerrado ? 'badge badge-danger ml-2' : 'badge badge-success ml-2')
+                            .text(cerrado ? 'Cerrado' : 'Activo')
+                        );
+                },
+                templateSelection: function (data) {
+                    if (!data.id) return data.text;
+                    var cerrado = $(data.element).data('cerrado') === '1';
+                    return $('<span>')
+                        .append($('<span>').text(data.text))
+                        .append($('<span>')
+                            .addClass(cerrado ? 'badge badge-danger ml-2' : 'badge badge-success ml-2')
+                            .text(cerrado ? 'Cerrado' : 'Activo')
+                        );
+                }
+            });
+
+            // ── DataTable ─────────────────────────────────────────
             function initDataTable() {
                 if ($.fn.DataTable.isDataTable('#tabla')) {
                     $('#tabla').DataTable().destroy();
@@ -214,14 +291,14 @@
                     pagingType: "full_numbers",
                     lengthMenu: [[50, 100, -1], [50, 100, "Todo"]],
                     language: {
-                        sProcessing:     "Procesando...",
-                        sLengthMenu:     "Mostrar _MENU_ registros",
-                        sZeroRecords:    "No se encontraron resultados",
-                        sEmptyTable:     "Ningún dato disponible en esta tabla",
-                        sInfo:           "Mostrando _START_ a _END_ de _TOTAL_ registros",
-                        sInfoEmpty:      "Mostrando 0 a 0 de 0 registros",
-                        sInfoFiltered:   "(filtrado de _MAX_ registros)",
-                        sSearch:         "Buscar:",
+                        sProcessing:   "Procesando...",
+                        sLengthMenu:   "Mostrar _MENU_ registros",
+                        sZeroRecords:  "No se encontraron resultados",
+                        sEmptyTable:   "Ningún dato disponible en esta tabla",
+                        sInfo:         "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                        sInfoEmpty:    "Mostrando 0 a 0 de 0 registros",
+                        sInfoFiltered: "(filtrado de _MAX_ registros)",
+                        sSearch:       "Buscar:",
                         oPaginate: {
                             sFirst: "Primero", sLast: "Último",
                             sNext: "Siguiente", sPrevious: "Anterior"
@@ -236,15 +313,34 @@
                 $('#tabla_filter input').addClass('form-control form-control-sm').css('display', 'inline-block');
             }
 
+            // ── Cargar tabla con filtros ──────────────────────────
             function cargarTabla() {
-                $('#tablaDatatable').load(ruta, function () {
+                const proyecto   = $('#filtro-proyecto').val();
+                const fechaDesde = $('#filtro-fecha-desde').val();
+                const fechaHasta = $('#filtro-fecha-hasta').val();
+
+                const params = new URLSearchParams();
+                if (proyecto)   params.append('proyecto',    proyecto);
+                if (fechaDesde) params.append('fecha_desde', fechaDesde);
+                if (fechaHasta) params.append('fecha_hasta', fechaHasta);
+
+                const url = params.toString() ? ruta + '?' + params.toString() : ruta;
+
+                $('#tablaDatatable').load(url, function () {
                     initDataTable();
                 });
             }
 
-            cargarTabla();
-
             window.recargar = function () { cargarTabla(); };
+
+            window.limpiarFiltros = function () {
+                $('#filtro-proyecto').val('').trigger('change');
+                $('#filtro-fecha-desde').val('');
+                $('#filtro-fecha-hasta').val('');
+                cargarTabla();
+            };
+
+            cargarTabla();
         });
     </script>
 
@@ -278,15 +374,15 @@
             const factura     = $('#factura-editar').val().trim();
             const descripcion = $('#descripcion-editar').val().trim();
 
-            if (fecha === '')          { toastr.error('La fecha es requerida'); return; }
-            if (factura.length > 100)  { toastr.error('Factura máximo 100 caracteres'); return; }
+            if (fecha === '')             { toastr.error('La fecha es requerida'); return; }
+            if (factura.length > 100)     { toastr.error('Factura máximo 100 caracteres'); return; }
             if (descripcion.length > 800) { toastr.error('Descripción máximo 800 caracteres'); return; }
 
             openLoading();
             const formData = new FormData();
-            formData.append('id', id);
-            formData.append('fecha', fecha);
-            formData.append('factura', factura);
+            formData.append('id',          id);
+            formData.append('fecha',       fecha);
+            formData.append('factura',     factura);
             formData.append('descripcion', descripcion);
 
             axios.post(urlAdmin + '/admin/historial/entradas/editar', formData)
@@ -333,7 +429,6 @@
         }
 
         // ── Detalle entrada ───────────────────────────────────────
-        // cerrado = 1 si proyecto transferido, 0 si activo
         function verDetalle(id, proyecto, fecha, cerrado) {
             $('#detalle-id-editar').data('entrada-id', id);
             $('#detalle-proyecto').text(proyecto);
@@ -343,7 +438,6 @@
             $('#detalle-vacio').hide();
             $('#detalle-loading').show();
 
-            // Mostrar badge y ocultar columna acción si está cerrado
             if (cerrado) {
                 $('#detalle-badge-cerrado').show();
                 $('#detalle-col-accion').hide();
@@ -360,7 +454,6 @@
                     if (response.data.success === 1 && response.data.detalle.length > 0) {
                         let html = '';
                         response.data.detalle.forEach((fila, index) => {
-                            // Botón editar solo si proyecto activo
                             const btnEditar = cerrado
                                 ? ''
                                 : `<button type="button" class="btn btn-warning btn-xs"

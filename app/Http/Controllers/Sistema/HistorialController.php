@@ -20,19 +20,30 @@ class HistorialController extends Controller
 
     public function indexHistorialEntradas()
     {
-        return view('backend.admin.historial.entradas.vistahistorialentradas');
+        $arrayProyectos = TipoProyecto::orderBy('nombre')->get(); // ajusta el modelo si es diferente
+
+        return view('backend.admin.historial.entradas.vistahistorialentradas',
+            compact('arrayProyectos'));
     }
 
-    public function tablaHistorialEntradas()
+    public function tablaHistorialEntradas(Request $request)
     {
         $arrayEntradas = Entradas::with([
             'tipoproyecto',
             'tipoproyectoTransferencia'
         ])
+            ->when($request->proyecto, fn($q) =>
+            $q->where('id_tipoproyecto', $request->proyecto)
+            )
+            ->when($request->fecha_desde, fn($q) =>
+            $q->whereDate('fecha', '>=', $request->fecha_desde)
+            )
+            ->when($request->fecha_hasta, fn($q) =>
+            $q->whereDate('fecha', '<=', $request->fecha_hasta)
+            )
             ->orderBy('fecha', 'desc')
             ->get()
             ->map(function ($item) {
-                // Formatear fecha con AM/PM
                 $item->fecha_fmt = date('d/m/Y h:i A', strtotime($item->fecha));
                 return $item;
             });
@@ -40,7 +51,6 @@ class HistorialController extends Controller
         return view('backend.admin.historial.entradas.tablahistorialentradas',
             compact('arrayEntradas'));
     }
-
 
     public function informacionEntrada(Request $request)
     {
@@ -224,12 +234,24 @@ class HistorialController extends Controller
 
     public function indexHistorialSalidas()
     {
-        return view('backend.admin.historial.salidas.vistahistorialsalidas');
+        $arrayProyectos = TipoProyecto::orderBy('nombre')->get();
+
+        return view('backend.admin.historial.salidas.vistahistorialsalidas',
+            compact('arrayProyectos'));
     }
 
-    public function tablaHistorialSalidas()
+    public function tablaHistorialSalidas(Request $request)
     {
         $arraySalidas = Salidas::with('tipoproyecto')
+            ->when($request->proyecto, fn($q) =>
+            $q->where('id_tipoproyecto', $request->proyecto)
+            )
+            ->when($request->fecha_desde, fn($q) =>
+            $q->whereDate('fecha', '>=', $request->fecha_desde)
+            )
+            ->when($request->fecha_hasta, fn($q) =>
+            $q->whereDate('fecha', '<=', $request->fecha_hasta)
+            )
             ->orderBy('fecha', 'desc')
             ->get()
             ->map(function ($item) {

@@ -39,21 +39,23 @@ class SalidasController extends Controller
     {
         if ($request->get('query')) {
 
-            $query = $request->get('query');
+            $query      = $request->get('query');
+            $idProyecto = $request->get('id_proyecto');
 
             $materiales = Materiales::where('nombre', 'LIKE', "%{$query}%")->pluck('id');
 
             if ($materiales->isEmpty()) {
                 return '';
             }
-            // ✅ Agrupar por id_material y SUMAR todos los disponibles
+
             $listado = DB::table('entradas_detalle as ed')
+                ->join('entradas as e', 'e.id', '=', 'ed.id_entradas') // 👈 JOIN a entradas
                 ->leftJoin(
                     DB::raw('(
-            SELECT id_entrada_detalle, SUM(cantidad_salida) as total_salido
-            FROM salidas_detalle
-            GROUP BY id_entrada_detalle
-        ) as sd'),
+                    SELECT id_entrada_detalle, SUM(cantidad_salida) as total_salido
+                    FROM salidas_detalle
+                    GROUP BY id_entrada_detalle
+                ) as sd'),
                     'sd.id_entrada_detalle', '=', 'ed.id'
                 )
                 ->select(
@@ -63,6 +65,7 @@ class SalidasController extends Controller
                     DB::raw('(SUM(ed.cantidad_inicial) - COALESCE(SUM(sd.total_salido), 0)) as disponible')
                 )
                 ->whereIn('ed.id_material', $materiales)
+                ->when($idProyecto, fn($q) => $q->where('e.id_tipoproyecto', $idProyecto)) // 👈 filtro por proyecto
                 ->groupBy('ed.id_material')
                 ->havingRaw('disponible > 0')
                 ->orderBy('ed.id_material')
@@ -85,13 +88,13 @@ class SalidasController extends Controller
                     " (" . optional($infoMaterial->unidadMedida)->nombre . ")";
 
                 $output .= '
-                    <li class="cursor-pointer" onclick="modificarValor(this)"
-                        id="' . $row->id_material . '"
-                        data-tipo="material">
-                        ' . $nombreCompleto . ' - Disponible: ' . $row->disponible . '
-                    </li>
-                    <hr>
-                ';
+                <li class="cursor-pointer" onclick="modificarValor(this)"
+                    id="' . $row->id_material . '"
+                    data-tipo="material">
+                    ' . $nombreCompleto . ' - Disponible: ' . $row->disponible . '
+                </li>
+                <hr>
+            ';
             }
 
             $output .= '</ul>';
@@ -99,6 +102,8 @@ class SalidasController extends Controller
             return $output;
         }
     }
+
+
 
     public function infoBodegaMaterialDetalleFila(Request $request)
     {
@@ -114,18 +119,19 @@ class SalidasController extends Controller
             return ['success' => 0];
         }
 
-        $infoMedida = UnidadMedida::find($infoMaterial->id_medida);
+        $infoMedida   = UnidadMedida::find($infoMaterial->id_medida);
+        $idProyecto   = $request->get('id_proyecto'); // 👈
 
         $listado = DB::table('entradas_detalle as ed')
             ->leftJoin(
                 DB::raw('(
-            SELECT id_entrada_detalle, SUM(cantidad_salida) as total_salido
-            FROM salidas_detalle
-            GROUP BY id_entrada_detalle
-        ) as sd'),
+                SELECT id_entrada_detalle, SUM(cantidad_salida) as total_salido
+                FROM salidas_detalle
+                GROUP BY id_entrada_detalle
+            ) as sd'),
                 'sd.id_entrada_detalle', '=', 'ed.id'
             )
-            ->leftJoin('entradas as e', 'e.id', '=', 'ed.id_entradas')
+            ->join('entradas as e', 'e.id', '=', 'ed.id_entradas') // 👈 INNER JOIN (antes era left)
             ->select(
                 'ed.id',
                 'ed.id_entradas',
@@ -136,6 +142,7 @@ class SalidasController extends Controller
                 DB::raw('(ed.cantidad_inicial - COALESCE(sd.total_salido, 0)) as cantidadActual')
             )
             ->where('ed.id_material', $request->id)
+            ->when($idProyecto, fn($q) => $q->where('e.id_tipoproyecto', $idProyecto)) // 👈
             ->havingRaw('cantidadActual > 0')
             ->orderBy('ed.id')
             ->get();
@@ -155,7 +162,6 @@ class SalidasController extends Controller
             'disponible'     => $disponible,
         ];
     }
-
 
 
 
@@ -223,7 +229,7 @@ class SalidasController extends Controller
             $salida->fecha = Carbon::parse($request->fecha)
                 ->setTimeFrom(Carbon::now());
             $salida->descripcion     = $request->descripcion;
-            $salida->id_tipoproyecto = $request->proyecto;
+            $salida->id_tipoproyecto = 5;
             $salida->es_transferencia= 0;
             $salida->save();
 
