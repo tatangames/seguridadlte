@@ -281,6 +281,7 @@
             $("#matrizM tbody tr").remove();
             var formData = new FormData();
             formData.append('id', edrop.id);
+            formData.append('id_proyecto', ID_PROYECTO);
 
             axios.post(urlAdmin + '/admin/buscar/material/disponibilidad', formData)
                 .then((response) => {
