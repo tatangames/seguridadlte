@@ -1995,6 +1995,21 @@ class ReportesController extends Controller
         $desde = $request->query('desde');
         $hasta = $request->query('hasta');
 
+
+        // Validar si fecha desde es menor a fecha de cierre
+        if ($desde && $infoProyecto->fecha_cierre) {
+
+            $fechaDesde = Carbon::parse($desde);
+            $fechaCierre = Carbon::parse($infoProyecto->fecha_cierre);
+            $fechaCierreFormat = Carbon::parse($infoProyecto->fecha_cierre)->format('d-m-Y');
+
+            if ($fechaDesde->lt($fechaCierre)) {
+                return response()->json([
+                    'mensaje' => 'La fecha desde no puede ser menor a la fecha de cierre del proyecto: ' . $fechaCierreFormat
+                ]);
+            }
+        }
+
         $transferencia = Transferencia::where('id_tipoproyecto_origen', $idtrans)
             ->orderBy('id', 'desc')
             ->first();
@@ -5053,7 +5068,7 @@ padding:5px 4px; background:#d9e1f2; text-align:center;";
                 <th style='text-align:center; width:8%'>SALDO INICIAL</th>
                 <th style='text-align:center; width:8%'>ENTRADAS</th>
                 <th style='text-align:center; width:8%'>SALDO ENTRADAS</th>
-                <th style='text-align:center; width:6%'>SALIDAS</th>
+                <th style='text-align:center; width:7%'>SALIDAS</th>
                 <th style='text-align:center; width:8%'>SALDO SALIDAS</th>
                 <th style='text-align:center; width:9%'>EXISTENCIA ACTUAL</th>
                 <th style='text-align:center; width:10%'>SALDO EXISTENCIA ACTUAL</th>

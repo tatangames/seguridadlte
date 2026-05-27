@@ -44,6 +44,7 @@ class TipoProyectoController extends Controller
         $dato = new TipoProyecto();
         $dato->nombre = $request->nombre;
         $dato->transferido = 0;
+        $dato->fecha_cierre = null;
 
         if($dato->save()){
             return ['success' => 1];

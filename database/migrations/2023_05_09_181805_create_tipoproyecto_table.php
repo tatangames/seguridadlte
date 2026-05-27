@@ -19,6 +19,9 @@ class CreateTipoproyectoTable extends Migration
 
             // 0: NO TRANSFERIDO, 1: SI TRANSFERIDO
             $table->boolean('transferido');
+
+            // FECHA DE CIERRE
+            $table->date('fecha_cierre')->nullable();
         });
     }
 

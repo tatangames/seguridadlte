@@ -323,7 +323,7 @@ class SalidasController extends Controller
             }
 
             // Marcar como cerrado
-            TipoProyecto::where('id', $request->idproyecto)->update(['transferido' => 1]);
+            TipoProyecto::where('id', $request->idproyecto)->update(['transferido' => 1, 'fecha_cierre' => $request->fecha]);
 
             // Manejar documento opcional
             $nomDocumento = null;

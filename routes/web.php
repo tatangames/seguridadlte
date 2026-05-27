@@ -225,7 +225,7 @@ Route::middleware('auth:admin')->group(function () {
 
 
     // Destino de sobrantes — a proyecto o salida general - GEAD-002-FORM
-    Route::get('/admin/reporte/inventario/destino/sobrantes/{idtrans}/{tipo}',
+    $uri = 'e/inventario/destino/sobrantes'; Route::get('/admin/report' . $uri . '/{idtrans}/{tipo}',
         [ReportesController::class, 'reporteDestinoSobrantes']);
 
 
