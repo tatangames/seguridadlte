@@ -282,6 +282,8 @@ class SalidasController extends Controller
             $salida->id_tipoproyecto = $request->proyecto;
             $salida->es_transferencia= 0;
             $salida->id_tipoproyecto_transferencia = null;
+            $salida->ficha_nombre = $request->fichaNombre;
+            $salida->ficha_talonario = $request->fichaTalonario;
             $salida->save();
 
             // ✅ Guardar detalle con cantidades agrupadas

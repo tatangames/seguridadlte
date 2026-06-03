@@ -134,8 +134,6 @@
                                        onclick="login()"
                                        class="btn btn-primary btn-lg w-100 shadow-lg">
 
-
-
                             </div>
                         </form>
                     </div>
@@ -185,7 +183,7 @@
         formData.append('usuario', usuario);
         formData.append('password', password);
 
-        axios.post(urlAdmin+'/login', formData, {
+        axios.post(urlAdmin + '/login', formData, {
         })
             .then((response) => {
                 closeLoading();

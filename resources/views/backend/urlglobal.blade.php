@@ -1,6 +1,6 @@
 <!-- URL GLOBAL PETICIONES POST          /obradebanco.com       -->
 <script type="text/javascript">
-    var urlAdmin = "/obradebanco.com";
+    const urlAdmin = "{{ config('app.url') }}"
 </script>
 
 <!-- ICONO GLOBAL DE LAS PESTAÑAS -->
