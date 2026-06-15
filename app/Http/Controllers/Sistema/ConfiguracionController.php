@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Sistema;
 
 use App\Http\Controllers\Controller;
+use App\Models\Cargo;
 use App\Models\Color;
 use App\Models\Cuenta;
 use App\Models\Departamentos;
@@ -710,6 +711,88 @@ class ConfiguracionController extends Controller
         Proveedor::where('id', $request->id)->update([
             'nombre' => $request->nombre,
             'telefono' => $request->telefono
+        ]);
+
+        return ['success' => 1];
+    }
+
+
+    //******************** CARGO *************************************************************
+
+
+    public function vistaCargo()
+    {
+        return view('backend.admin.configuracion.cargo.vistacargo');
+    }
+
+    public function tablaCargo()
+    {
+        $lista = Cargo::orderBy('nombre', 'ASC')->get();
+
+        return view('backend.admin.configuracion.cargo.tablacargo', compact('lista'));
+    }
+
+
+    public function nuevoCargo(Request $request)
+    {
+        $regla = array(
+            'nombre' => 'required'
+        );
+
+        $validar = Validator::make($request->all(), $regla);
+
+        if ($validar->fails()) {
+            return ['success' => 0];
+        }
+        DB::beginTransaction();
+
+        try {
+            $dato = new Cargo();
+            $dato->nombre = $request->nombre;
+            $dato->save();
+
+            DB::commit();
+            return ['success' => 1];
+        } catch (\Throwable $e) {
+            Log::info('error ' . $e);
+            DB::rollback();
+            return ['success' => 99];
+        }
+    }
+
+
+    public function infoCargo(Request $request)
+    {
+        $regla = array(
+            'id' => 'required'
+        );
+
+        $validar = Validator::make($request->all(), $regla);
+
+        if ($validar->fails()) {
+            return ['success' => 0];
+        }
+
+        $info = Cargo::where('id', $request->id)->first();
+
+        return ['success' => 1, 'info' => $info];
+    }
+
+    public function actualizarCargo(Request $request)
+    {
+        $regla = array(
+            'id' => 'required',
+            'nombre' => 'required'
+        );
+
+        $validar = Validator::make($request->all(), $regla);
+
+        if ($validar->fails()) {
+            return ['success' => 0];
+        }
+
+        Cargo::where('id', $request->id)->update([
+            'nombre' => $request->nombre
         ]);
 
         return ['success' => 1];

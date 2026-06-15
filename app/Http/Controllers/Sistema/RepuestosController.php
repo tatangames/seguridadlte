@@ -3,15 +3,19 @@
 namespace App\Http\Controllers\Sistema;
 
 use App\Http\Controllers\Controller;
+use App\Models\Color;
 use App\Models\Entradas;
 use App\Models\EntradasDetalle;
 use App\Models\Herramientas;
 use App\Models\HistoHerramientaDescartada;
 use App\Models\HistorialEntradas;
 use App\Models\HistorialEntradasDeta;
+use App\Models\Marca;
 use App\Models\Materiales;
+use App\Models\Normativa;
 use App\Models\ObjetoEspecifico;
 use App\Models\SalidasDetalle;
+use App\Models\Talla;
 use App\Models\TipoProyecto;
 use App\Models\UnidadMedida;
 use Carbon\Carbon;
@@ -23,6 +27,90 @@ use Illuminate\Support\Facades\Validator;
 
 class RepuestosController extends Controller
 {
+
+    public function vistaMateriales()
+    {
+        $arrayUnidades  = UnidadMedida::orderBy('nombre', 'ASC')->get();
+        $arrayMarcas    = Marca::orderBy('nombre', 'ASC')->get();
+        $arrayNormativa = Normativa::orderBy('nombre', 'ASC')->get();
+        $arrayColor     = Color::orderBy('nombre', 'ASC')->get();
+        $arrayTalla     = Talla::orderBy('nombre', 'ASC')->get();
+
+        $lista = DB::table('materiales as m')
+            ->leftJoin('unidad_medida as um', 'um.id', '=', 'm.id_medida')
+            ->leftJoin('marca as ma', 'ma.id', '=', 'm.id_marca')
+            ->leftJoin('normativa as no', 'no.id', '=', 'm.id_normativa')
+            ->leftJoin('color as co', 'co.id', '=', 'm.id_color')
+            ->leftJoin('talla as ta', 'ta.id', '=', 'm.id_talla')
+            ->select(
+                'm.*',
+                'um.nombre as unidadMedida',
+                'ma.nombre as marca',
+                'no.nombre as normativa',
+                'co.nombre as color',
+                'ta.nombre as talla',
+                DB::raw('(SELECT COALESCE(SUM(cantidad_inicial),0)
+                      FROM entradas_detalle
+                      WHERE id_material = m.id) as total_ingresado'),
+                DB::raw('(SELECT COALESCE(SUM(sd.cantidad_salida),0)
+                      FROM salidas_detalle sd
+                      INNER JOIN entradas_detalle ed
+                          ON ed.id = sd.id_entrada_detalle
+                      WHERE ed.id_material = m.id) as total_salido'),
+                DB::raw('(
+                (SELECT COALESCE(SUM(cantidad_inicial),0)
+                 FROM entradas_detalle WHERE id_material = m.id)
+                -
+                (SELECT COALESCE(SUM(sd.cantidad_salida),0)
+                 FROM salidas_detalle sd
+                 INNER JOIN entradas_detalle ed
+                     ON ed.id = sd.id_entrada_detalle
+                 WHERE ed.id_material = m.id)
+            ) as cantidadGlobal')
+            )
+            ->get();
+
+        return view('backend.admin.materiales.vistamateriales', compact(
+            'arrayUnidades', 'arrayMarcas', 'arrayNormativa',
+            'arrayColor', 'arrayTalla', 'lista'
+        ));
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public function index()
     {

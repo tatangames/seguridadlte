@@ -325,28 +325,11 @@ return [
         ],
 
         [
-            'text'    => 'Proyectos',
-            'icon'    => 'fas fa-pen-alt',
-            'can'     => 'sidebar.inventario',
-            'submenu' => [
-                [
-                    'text' => 'Lista de Proyectos',
-                    'icon' => 'far fa-circle',
-                    'route' => 'admin.tiposproyecto.index',
-                ],
-                [
-                    'text' => 'Cierre de Proyectos',
-                    'icon' => 'far fa-circle',
-                    'route' => 'admin.transferencias.index',
-                ],
-
-                [
-                    'text' => 'Reservas Pendientes',
-                    'icon' => 'far fa-circle',
-                    'route' => 'admin.reservas.index',
-                ],
-            ],
+            'text' => 'Materiales',
+            'icon' => 'far fa-circle',
+            'route' => 'admin.materiales.index',
         ],
+
 
 
         [
@@ -417,6 +400,19 @@ return [
         ],
 
         [
+            'text'    => 'Empleados',
+            'icon'    => 'fas fa-pen-alt',
+            'can'     => 'sidebar.inventario',
+            'submenu' => [
+                [
+                    'text' => 'Cargos',
+                    'icon' => 'far fa-circle',
+                    'route' => 'admin.cargo.index',
+                ],
+            ],
+        ],
+
+        [
             'text'    => 'Configuración',
             'icon'    => 'fas fa-pen-alt',
             'can'     => 'sidebar.inventario',
@@ -466,6 +462,7 @@ return [
                     'icon' => 'far fa-circle',
                     'route' => 'admin.proveedor.index',
                 ],
+
             ],
         ],
 
