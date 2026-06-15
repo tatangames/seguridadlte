@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'title' => 'Obra de Banco',
+    'title' => 'USSO',
     'title_prefix' => '',
     'title_postfix' => '',
 
@@ -63,7 +63,7 @@ return [
     |
     */
 
-    'logo' => '<b>Obra de Banco</b>',
+    'logo' => '<b>USSO</b>',
     'logo_img' => 'images/logosistema.png',
     'logo_img_class' => 'brand-image img-circle elevation-3',
     'logo_img_xl' => null,
@@ -257,7 +257,7 @@ return [
     */
 
     'use_route_url' => false,
-    'dashboard_url' => '#',
+    'dashboard_url' => '/',
     'logout_url' => 'logout',
     'login_url' => 'login',
     'register_url' => 'register',
@@ -437,9 +437,34 @@ return [
                     'route' => 'admin.objetoespecifico.index',
                 ],
                 [
-                    'text' => 'Unidades',
+                    'text' => 'Unidades Medida',
                     'icon' => 'far fa-circle',
-                    'route' => 'admin.departamentos.index',
+                    'route' => 'admin.unidadmedida.index',
+                ],
+                [
+                    'text' => 'Marca',
+                    'icon' => 'far fa-circle',
+                    'route' => 'admin.marca.index',
+                ],
+                [
+                    'text' => 'Talla',
+                    'icon' => 'far fa-circle',
+                    'route' => 'admin.talla.index',
+                ],
+                [
+                    'text' => 'Color',
+                    'icon' => 'far fa-circle',
+                    'route' => 'admin.color.index',
+                ],
+                [
+                    'text' => 'Normativa',
+                    'icon' => 'far fa-circle',
+                    'route' => 'admin.normativa.index',
+                ],
+                [
+                    'text' => 'Proveedores',
+                    'icon' => 'far fa-circle',
+                    'route' => 'admin.proveedor.index',
                 ],
             ],
         ],

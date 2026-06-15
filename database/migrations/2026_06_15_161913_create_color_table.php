@@ -7,16 +7,13 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * MANEJO DE UNA SOLA FILA
+     * COLOR
      */
     public function up(): void
     {
-        Schema::create('informacion_general', function (Blueprint $table) {
+        Schema::create('color', function (Blueprint $table) {
             $table->id();
-
-            // REPORTE PIXELES DISTANCIAS
-            $table->integer('px_firmas');
-
+            $table->string('nombre', 100);
         });
     }
 
@@ -25,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('informacion_general');
+        Schema::dropIfExists('color');
     }
 };

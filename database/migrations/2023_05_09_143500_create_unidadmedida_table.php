@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 class CreateUnidadmedidaTable extends Migration
 {
     /**
-     * Run the migrations.
+     * UNIDAD DE MEDIDA
      *
      * @return void
      */

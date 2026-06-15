@@ -1,9 +1,9 @@
 @extends('adminlte::page')
 
-@section('title', 'Unidades')
+@section('title', 'Normativa')
 
 @section('content_header')
-    <h1>Unidades</h1>
+    <h1>Normativa</h1>
 @stop
 
 
@@ -83,7 +83,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Nuevo</h4>
+                    <h4 class="modal-title">Nuevo Registro</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -162,7 +162,7 @@
 
         <script>
             $(function () {
-                const ruta = "{{ url('/admin/departamentos/tabla/index') }}";
+                const ruta = "{{ url('/admin/normativa/tabla/index') }}";
 
                 function initDataTable() {
                     // Si ya hay instancia, destrúyela antes de re-crear
@@ -224,7 +224,7 @@
     <script>
 
         function recargar(){
-            var ruta = "{{ url('/admin/departamentos/tabla/index') }}";
+            var ruta = "{{ url('/admin/normativa/tabla/index') }}";
             $('#tablaDatatable').load(ruta);
         }
 
@@ -245,7 +245,7 @@
             var formData = new FormData();
             formData.append('nombre', nombre);
 
-            axios.post(urlAdmin+'/admin/departamentos/nuevo', formData, {
+            axios.post(urlAdmin+'/admin/normativa/nuevo', formData, {
             })
                 .then((response) => {
                     closeLoading();
@@ -268,7 +268,7 @@
             openLoading();
             document.getElementById("formulario-editar").reset();
 
-            axios.post(urlAdmin+'/admin/departamentos/informacion',{
+            axios.post(urlAdmin+'/admin/normativa/informacion',{
                 'id': id
             })
                 .then((response) => {
@@ -302,11 +302,10 @@
             formData.append('id', id);
             formData.append('nombre', nombre);
 
-            axios.post(urlAdmin+'/admin/departamentos/editar', formData, {
+            axios.post(urlAdmin+'/admin/normativa/editar', formData, {
             })
                 .then((response) => {
                     closeLoading();
-
                     if(response.data.success === 1){
                         toastr.success('Actualizado correctamente');
                         $('#modalEditar').modal('hide');
@@ -315,16 +314,12 @@
                     else {
                         toastr.error('Error al actualizar');
                     }
-
                 })
                 .catch((error) => {
                     toastr.error('Error al actualizar');
                     closeLoading();
                 });
         }
-
-
     </script>
-
 
 @endsection

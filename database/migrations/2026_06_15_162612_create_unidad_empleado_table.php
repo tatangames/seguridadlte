@@ -7,16 +7,14 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * MANEJO DE UNA SOLA FILA
+     * UNIDAD DEL EMPLEADO
      */
     public function up(): void
     {
-        Schema::create('informacion_general', function (Blueprint $table) {
+        Schema::create('unidad_empleado', function (Blueprint $table) {
             $table->id();
-
-            // REPORTE PIXELES DISTANCIAS
-            $table->integer('px_firmas');
-
+            $table->foreignId('id_distrito')->constrained('distrito');
+            $table->string('nombre', 100);
         });
     }
 
@@ -25,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('informacion_general');
+        Schema::dropIfExists('unidad_empleado');
     }
 };

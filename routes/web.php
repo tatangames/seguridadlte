@@ -60,12 +60,6 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('/admin/unidadmedida/informacion', [ConfiguracionController::class, 'informacionUnidadMedida']);
     Route::post('/admin/unidadmedida/editar', [ConfiguracionController::class, 'editarUnidadMedida']);
 
-    // --- DEPARTAMENTOS ---
-    Route::get('/admin/departamentos/index', [ConfiguracionController::class,'indexDepartamentos'])->name('admin.departamentos.index');
-    Route::get('/admin/departamentos/tabla/index', [ConfiguracionController::class,'tablaDepartamentos']);
-    Route::post('/admin/departamentos/nuevo', [ConfiguracionController::class, 'nuevaDepartamentos']);
-    Route::post('/admin/departamentos/informacion', [ConfiguracionController::class, 'informacionDepartamentos']);
-    Route::post('/admin/departamentos/editar', [ConfiguracionController::class, 'editarDepartamentos']);
 
     // --- RUBRO ---
     Route::get('/admin/rubro/index', [ConfiguracionController::class,'indexRubro'])->name('admin.rubro.index');
@@ -87,6 +81,54 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('/admin/objetoespecifico/nuevo', [ConfiguracionController::class, 'nuevaObjetoEspecifico']);
     Route::post('/admin/objetoespecifico/informacion', [ConfiguracionController::class, 'informacionObjetoEspecifico']);
     Route::post('/admin/objetoespecifico/editar', [ConfiguracionController::class, 'editarObjetoEspecifico']);
+
+
+
+    // MARCA
+    Route::get('/admin/marca/index', [ConfiguracionController::class,'vistaMarca'])->name('admin.marca.index');
+    Route::get('/admin/marca/tabla/index', [ConfiguracionController::class,'tablaMarca']);
+    Route::post('/admin/marca/nuevo', [ConfiguracionController::class,'nuevoMarca']);
+    Route::post('/admin/marca/informacion', [ConfiguracionController::class,'infoMarca']);
+    Route::post('/admin/marca/editar', [ConfiguracionController::class,'actualizarMarca']);
+
+    // COLOR
+    Route::get('/admin/color/index', [ConfiguracionController::class,'vistaColor'])->name('admin.color.index');
+    Route::get('/admin/color/tabla/index', [ConfiguracionController::class,'tablaColor']);
+    Route::post('/admin/color/nuevo', [ConfiguracionController::class,'nuevoColor']);
+    Route::post('/admin/color/informacion', [ConfiguracionController::class,'infoColor']);
+    Route::post('/admin/color/editar', [ConfiguracionController::class,'actualizarColor']);
+
+    // TALLA
+    Route::get('/admin/talla/index', [ConfiguracionController::class,'vistaTalla'])->name('admin.talla.index');
+    Route::get('/admin/talla/tabla/index', [ConfiguracionController::class,'tablaTalla']);
+    Route::post('/admin/talla/nuevo', [ConfiguracionController::class,'nuevoTalla']);
+    Route::post('/admin/talla/informacion', [ConfiguracionController::class,'infoTalla']);
+    Route::post('/admin/talla/editar', [ConfiguracionController::class,'actualizarTalla']);
+
+    // NORMATIVA
+    Route::get('/admin/normativa/index', [ConfiguracionController::class,'vistaNormativa'])->name('admin.normativa.index');
+    Route::get('/admin/normativa/tabla/index', [ConfiguracionController::class,'tablaNormativa']);
+    Route::post('/admin/normativa/nuevo', [ConfiguracionController::class,'nuevoNormativa']);
+    Route::post('/admin/normativa/informacion', [ConfiguracionController::class,'infoNormativa']);
+    Route::post('/admin/normativa/editar', [ConfiguracionController::class,'actualizarNormativa']);
+
+    // PROVEEDOR
+    Route::get('/admin/proveedor/index', [ConfiguracionController::class,'vistaProveedor'])->name('admin.proveedor.index');
+    Route::get('/admin/proveedor/tabla/index', [ConfiguracionController::class,'tablaProveedor']);
+    Route::post('/admin/proveedor/nuevo', [ConfiguracionController::class,'nuevoProveedor']);
+    Route::post('/admin/proveedor/informacion', [ConfiguracionController::class,'infoProveedor']);
+    Route::post('/admin/proveedor/editar', [ConfiguracionController::class,'actualizarProveedor']);
+
+
+
+
+
+
+
+
+
+
+
 
     // --- INVENTARIO ---
     Route::get('/admin/inventario/index', [RepuestosController::class,'index'])->name('admin.materiales.index');
