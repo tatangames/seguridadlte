@@ -41,7 +41,6 @@
 
 @section('css')
     <style>
-        /* ── Stats ── */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -69,13 +68,11 @@
         .stat-value { font-size: 22px; font-weight: 700; line-height: 1; color: #1e293b; }
         .stat-label { font-size: 11px; color: #64748b; margin-top: 3px; text-transform: uppercase; letter-spacing: .5px; }
 
-        /* ── Filter bar ── */
         .filter-bar {
             width: 100%; box-sizing: border-box;
             background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
             padding: 14px 16px; margin-bottom: 16px;
             display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;
-            justify-content: flex-start;
         }
         .filter-bar .filter-item { display: flex; flex-direction: column; gap: 4px; }
         .filter-bar label { font-size: 11px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: .4px; margin: 0; }
@@ -94,7 +91,6 @@
         }
         .btn-filter-clear:hover { background: #f1f5f9; border-color: #94a3b8; }
 
-        /* ── Stock badge ── */
         .stock-badge {
             display: inline-flex; align-items: center; gap: 5px;
             padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
@@ -104,7 +100,6 @@
         .stock-badge.danger { background: #fee2e2; color: #991b1b; }
         .stock-badge .dot   { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
-        /* ── Meses badge ── */
         .meses-badge {
             display: inline-flex; align-items: center; gap: 4px;
             padding: 2px 8px; border-radius: 12px; font-size: 11px;
@@ -113,7 +108,6 @@
         .meses-badge.vigente { background: #f0fdf4; color: #166534; }
         .meses-badge.sindata { background: #f1f5f9; color: #64748b; }
 
-        /* ── Table actions ── */
         .btn-action {
             display: inline-flex; align-items: center; gap: 4px;
             padding: 4px 10px; border-radius: 5px; font-size: 11px;
@@ -124,7 +118,6 @@
         .btn-action.detail       { background: #22c55e; color: #fff; }
         .btn-action.detail:hover { background: #16a34a; }
 
-        /* ── Modal ── */
         .modal-xl { max-width: 95% !important; width: 1200px; }
         @media (max-width: 1280px) { .modal-xl { width: 98%; } }
         .modal-section-title {
@@ -135,7 +128,6 @@
         .form-label-styled { font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px; display: block; }
         .required-star { color: #ef4444; }
 
-        /* ── Responsive ── */
         @media (max-width: 768px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .filter-bar { flex-direction: column; align-items: flex-start; }
@@ -149,7 +141,6 @@
 @section('content')
     <div id="divcontenedor">
 
-        {{-- ░░ HEADER ░░ --}}
         <section class="content-header">
             <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px; flex-wrap:wrap">
                 <button type="button" onclick="modalAgregar()" class="btn btn-primary btn-sm" style="height:34px">
@@ -158,39 +149,38 @@
             </div>
         </section>
 
-        {{-- ░░ STATS ░░ --}}
-        <div class="stats-grid">
+        {{-- STATS --}}
+        <div class="stats-grid" id="statsGrid">
             <div class="stat-card blue">
                 <div class="stat-icon"><i class="fas fa-layer-group"></i></div>
                 <div>
-                    <div class="stat-value">{{ $lista->count() }}</div>
+                    <div class="stat-value" id="stat-total">{{ $lista->count() }}</div>
                     <div class="stat-label">Total Materiales</div>
                 </div>
             </div>
             <div class="stat-card green">
                 <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
                 <div>
-                    <div class="stat-value">{{ $lista->filter(fn($r) => $r->cantidadGlobal >= 5)->count() }}</div>
+                    <div class="stat-value" id="stat-ok">{{ $lista->filter(fn($r) => $r->cantidadGlobal >= 5)->count() }}</div>
                     <div class="stat-label">Con Stock (≥ 5)</div>
                 </div>
             </div>
             <div class="stat-card yellow">
                 <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
                 <div>
-                    <div class="stat-value">{{ $lista->filter(fn($r) => $r->cantidadGlobal >= 1 && $r->cantidadGlobal <= 4)->count() }}</div>
+                    <div class="stat-value" id="stat-low">{{ $lista->filter(fn($r) => $r->cantidadGlobal >= 1 && $r->cantidadGlobal <= 4)->count() }}</div>
                     <div class="stat-label">Stock Bajo (1 – 4)</div>
                 </div>
             </div>
             <div class="stat-card red">
                 <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
                 <div>
-                    <div class="stat-value">{{ $lista->filter(fn($r) => $r->cantidadGlobal <= 0)->count() }}</div>
+                    <div class="stat-value" id="stat-zero">{{ $lista->filter(fn($r) => $r->cantidadGlobal <= 0)->count() }}</div>
                     <div class="stat-label">Sin Stock (0)</div>
                 </div>
             </div>
         </div>
 
-        {{-- ░░ TABLA ░░ --}}
         <section class="content">
             <div class="container-fluid">
                 <div class="card card-primary">
@@ -199,7 +189,7 @@
                     </div>
                     <div class="card-body">
 
-                        {{-- ░░ FILTER BAR ░░ --}}
+                        {{-- FILTER BAR --}}
                         <div class="filter-bar">
                             <div class="filter-item">
                                 <label><i class="fas fa-tag"></i> Marca</label>
@@ -258,10 +248,9 @@
                         <div id="filtro-info" style="font-size:12px; color:#64748b; margin-bottom:8px; display:none">
                             <i class="fas fa-filter"></i> Mostrando
                             <strong id="filtro-visible">0</strong> de
-                            <strong>{{ $lista->count() }}</strong> registros
+                            <strong id="filtro-total">{{ $lista->count() }}</strong> registros
                         </div>
 
-                        {{-- ░░ TABLA ░░ --}}
                         <div id="tablaDatatable">
                             <div class="table-responsive">
                                 <table id="tabla" class="table table-bordered table-striped">
@@ -273,62 +262,13 @@
                                         <th style="width:8%">Marca</th>
                                         <th style="width:8%">Normativa</th>
                                         <th style="width:6%">Talla</th>
-                                        <th style="width:6%">Color</th>
                                         <th style="width:10%">Otros</th>
                                         <th style="width:8%">Stock Actual</th>
                                         <th style="width:8%">Meses Cambio</th>
                                         <th style="width:11%">Opciones</th>
                                     </tr>
                                     </thead>
-                                    <tbody>
-                                    @foreach($lista as $dato)
-                                        @php
-                                            $stock = (int) $dato->cantidadGlobal;
-                                            if ($stock >= 5)     { $stockClass = 'ok';     }
-                                            elseif ($stock >= 1) { $stockClass = 'warn';   }
-                                            else                 { $stockClass = 'danger'; }
-
-                                            $meses = (int) $dato->meses_cambio;
-                                            if ($meses === 0)    { $mesesClass = 'sindata'; $mesesLabel = '—'; }
-                                            elseif ($meses <= 3) { $mesesClass = 'proximo'; $mesesLabel = $meses . ' mes' . ($meses > 1 ? 'es' : ''); }
-                                            else                 { $mesesClass = 'vigente'; $mesesLabel = $meses . ' meses'; }
-                                        @endphp
-                                        <tr>
-                                            <td>
-                                                @if($dato->codigo)
-                                                    <code style="font-size:11px; background:#f1f5f9; padding:2px 6px; border-radius:4px">{{ $dato->codigo }}</code>
-                                                @else
-                                                    <span style="color:#cbd5e1">—</span>
-                                                @endif
-                                            </td>
-                                            <td style="font-weight:500">{{ $dato->nombre }}</td>
-                                            <td style="font-size:12px">{{ $dato->unidadMedida }}</td>
-                                            <td style="font-size:12px">{{ $dato->marca }}</td>
-                                            <td style="font-size:12px">{{ $dato->normativa }}</td>
-                                            <td style="font-size:12px">{{ $dato->talla ?: '—' }}</td>
-                                            <td style="font-size:12px">{{ $dato->color ?: '—' }}</td>
-                                            <td style="font-size:12px; color:#475569">{{ $dato->otros ?: '—' }}</td>
-                                            <td>
-                                            <span class="stock-badge {{ $stockClass }}">
-                                                <span class="dot"></span> {{ $stock }}
-                                            </span>
-                                            </td>
-                                            <td>
-                                            <span class="meses-badge {{ $mesesClass }}">
-                                                <i class="fas fa-clock" style="font-size:10px"></i> {{ $mesesLabel }}
-                                            </span>
-                                            </td>
-                                            <td>
-                                                <button class="btn-action edit" onclick="informacion({{ $dato->id }})">
-                                                    <i class="fas fa-edit"></i> Editar
-                                                </button>
-                                                <button class="btn-action detail" style="margin-top:4px" onclick="infoDetalle({{ $dato->id }})">
-                                                    <i class="fas fa-eye"></i> Detalle
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                    </tbody>
+                                    @include('backend.admin.materiales.tablamateriales')
                                 </table>
                             </div>
                         </div>
@@ -338,7 +278,7 @@
             </div>
         </section>
 
-        {{-- ░░ MODAL AGREGAR ░░ --}}
+        {{-- MODAL AGREGAR --}}
         <div class="modal fade" id="modalAgregar">
             <div class="modal-dialog modal-xl">
                 <div class="modal-content">
@@ -349,7 +289,6 @@
                     <div class="modal-body">
                         <form id="formulario-nuevo" onsubmit="event.preventDefault(); nuevo();">
                             <div class="card-body">
-
                                 <div class="modal-section-title"><i class="fas fa-info-circle" style="margin-right:5px"></i>Identificación</div>
                                 <div class="row">
                                     <div class="col-md-9">
@@ -451,7 +390,6 @@
                                         </div>
                                     </div>
                                 </div>
-
                             </div>
                         </form>
                     </div>
@@ -463,7 +401,7 @@
             </div>
         </div>
 
-        {{-- ░░ MODAL EDITAR ░░ --}}
+        {{-- MODAL EDITAR --}}
         <div class="modal fade" id="modalEditar">
             <div class="modal-dialog modal-xl">
                 <div class="modal-content">
@@ -549,7 +487,6 @@
                                         </div>
                                     </div>
                                 </div>
-
                             </div>
                         </form>
                     </div>
@@ -572,6 +509,8 @@
     <script src="{{ asset('js/select2.min.js') }}" type="text/javascript"></script>
 
     <script>
+        var urlTabla = "{{ url('admin/materiales/tabla') }}";
+
         function initSelect2(id) {
             $('#' + id).select2({
                 theme: "bootstrap-5",
@@ -580,48 +519,117 @@
             });
         }
 
-        $(document).ready(function () {
 
-            window.seguroBuscador    = true;
-            window.txtContenedorGlobal = this;
+        function iniciarDataTable() {
 
-            $(document).click(function () { $(".droplista").hide(); });
+            if ($.fn.DataTable.isDataTable('#tabla')) {
+                $('#tabla').DataTable().destroy();
+            }
 
-            // ── DataTable ────────────────────────────────────────────────────
             $('#tabla').DataTable({
-                paging:       true,
+                paging: true,
                 lengthChange: true,
-                searching:    true,
-                ordering:     true,
-                info:         true,
-                autoWidth:    false,
-                pagingType:   "full_numbers",
-                lengthMenu:   [[25, 50, 100, 500, -1], [25, 50, 100, 500, "Todo"]],
-                order:        [[1, "asc"]],
-                columnDefs:   [{ orderable: false, targets: 10 }],
+                searching: true,
+                ordering: true,
+                info: true,
+                autoWidth: false,
+                responsive: true,
+                pagingType: "full_numbers",
+
+                lengthMenu: [
+                    [25, 50, 100, 500, -1],
+                    [25, 50, 100, 500, "Todo"]
+                ],
+
+                // Orden inicial por nombre ASC
+                order: [[1, "asc"]],
+
+                // Deshabilitar ordenar solo en Opciones
+                columnDefs: [
+                    {
+                        orderable: false,
+                        targets: 9
+                    }
+                ],
+
                 language: {
-                    sProcessing:   "Procesando...",
-                    sLengthMenu:   "Mostrar _MENU_ registros",
-                    sZeroRecords:  "No se encontraron resultados",
-                    sEmptyTable:   "Ningún dato disponible",
-                    sInfo:         "Mostrando del _START_ al _END_ de _TOTAL_ registros",
-                    sInfoEmpty:    "Mostrando 0 registros",
+                    sProcessing: "Procesando...",
+                    sLengthMenu: "Mostrar _MENU_ registros",
+                    sZeroRecords: "No se encontraron resultados",
+                    sEmptyTable: "Ningún dato disponible",
+                    sInfo: "Mostrando del _START_ al _END_ de _TOTAL_ registros",
+                    sInfoEmpty: "Mostrando 0 registros",
                     sInfoFiltered: "(filtrado de _MAX_ registros)",
-                    sSearch:       "Buscar:",
+                    sSearch: "Buscar:",
                     sLoadingRecords: "Cargando...",
                     oPaginate: {
-                        sFirst: "Primero", sLast: "Último",
-                        sNext: "Siguiente", sPrevious: "Anterior"
+                        sFirst: "Primero",
+                        sLast: "Último",
+                        sNext: "Siguiente",
+                        sPrevious: "Anterior"
+                    },
+                    oAria: {
+                        sSortAscending: ": activar para ordenar ascendente",
+                        sSortDescending: ": activar para ordenar descendente"
                     }
                 },
-                responsive: true,
+
                 dom:
                     "<'row align-items-center'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6 text-md-right'f>>" +
                     "tr" +
-                    "<'row align-items-center'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"
-            });
+                    "<'row align-items-center'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
 
-            // ── Select2 ──────────────────────────────────────────────────────
+                initComplete: function () {
+                    $('#tabla thead th').css({
+                        'cursor': 'pointer',
+                        'user-select': 'none'
+                    });
+                }
+            });
+        }
+
+
+
+        function recargarTabla() {
+            if ($.fn.DataTable.isDataTable('#tabla')) {
+                $('#tabla').DataTable().destroy();
+            }
+
+            axios.get(urlTabla)
+                .then(function(res) {
+                    $('#tabla').find('tbody').remove();
+                    $('#tabla').append(res.data);
+                    iniciarDataTable();
+
+                    // actualizar stats
+                    var total = 0, ok = 0, low = 0, zero = 0;
+                    $('#tabla tbody tr').each(function() {
+                        var stock = parseInt($(this).data('stock')) || 0;
+                        total++;
+                        if (stock >= 5)            ok++;
+                        else if (stock >= 1)       low++;
+                        else                       zero++;
+                    });
+                    $('#stat-total').text(total);
+                    $('#stat-ok').text(ok);
+                    $('#stat-low').text(low);
+                    $('#stat-zero').text(zero);
+                    $('#filtro-total').text(total);
+                    $('#filtro-info').hide();
+                })
+                .catch(function() {
+                    toastr.error('Error al recargar la tabla');
+                });
+        }
+
+        $(document).ready(function () {
+            window.seguroBuscador      = true;
+            window.txtContenedorGlobal = document;
+
+            $(document).click(function () { $(".droplista").hide(); });
+
+            iniciarDataTable();
+
             ['select-unidad-nuevo','select-marca-nuevo','select-normativa-nuevo',
                 'select-color-nuevo','select-talla-nuevo',
                 'select-unidad-editar','select-marca-editar','select-normativa-editar',
@@ -642,13 +650,12 @@
                 var tds      = $(this).find('td');
                 var cod      = tds.eq(0).text().toLowerCase();
                 var nom      = tds.eq(1).text().toLowerCase();
-                var med      = tds.eq(2).text().toLowerCase();
-                var mar      = tds.eq(3).text().toLowerCase();
-                var nor      = tds.eq(4).text().toLowerCase();
-                var stock    = parseInt(tds.eq(8).text().trim()) || 0;
-                var mesesTxt = tds.eq(9).text().trim();
-                var meses    = parseInt(mesesTxt) || 0;
-                var sinFecha = mesesTxt === '—';
+                var med      = $(this).data('unidad') || '';
+                var mar      = $(this).data('marca') || '';
+                var nor      = $(this).data('normativa') || '';
+                var stock    = parseInt($(this).data('stock')) || 0;
+                var meses    = parseInt($(this).data('meses')) || 0;
+                var sinFecha = $(this).data('sinfecha') == '1';
                 var show     = true;
 
                 if (marca     && !mar.includes(marca))     show = false;
@@ -731,7 +738,7 @@
                     if (res.data.success === 1) {
                         toastr.success('Material registrado correctamente');
                         $('#modalAgregar').modal('hide');
-                        location.reload();
+                        recargarTabla();
                     } else { toastr.error('Error al registrar'); }
                 })
                 .catch(() => { toastr.error('Error al registrar'); closeLoading(); });
@@ -769,11 +776,11 @@
                         $('#' + selectId).trigger('change');
                     }
 
-                    poblarSelect('select-unidad-editar',   d.unidad,    d.material.id_medida,    false);
-                    poblarSelect('select-marca-editar',    d.marca,     d.material.id_marca,     false);
-                    poblarSelect('select-normativa-editar',d.normativa, d.material.id_normativa, false);
-                    poblarSelect('select-color-editar',    d.color,     d.material.id_color,     true);
-                    poblarSelect('select-talla-editar',    d.talla,     d.material.id_talla,     true);
+                    poblarSelect('select-unidad-editar',    d.unidad,    d.material.id_medida,    false);
+                    poblarSelect('select-marca-editar',     d.marca,     d.material.id_marca,     false);
+                    poblarSelect('select-normativa-editar', d.normativa, d.material.id_normativa, false);
+                    poblarSelect('select-color-editar',     d.color,     d.material.id_color,     true);
+                    poblarSelect('select-talla-editar',     d.talla,     d.material.id_talla,     true);
                 })
                 .catch(() => { closeLoading(); toastr.error('Información no encontrada'); });
         }
@@ -816,7 +823,7 @@
                     if (res.data.success === 1) {
                         toastr.success('Material actualizado correctamente');
                         $('#modalEditar').modal('hide');
-                        location.reload();
+                        recargarTabla();
                     } else { toastr.error('Error al actualizar'); }
                 })
                 .catch(() => { toastr.error('Error al actualizar'); closeLoading(); });

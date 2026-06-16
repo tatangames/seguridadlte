@@ -332,85 +332,14 @@ return [
 
 
 
-        [
-            'text'    => 'Inventario',
-            'icon'    => 'fas fa-pen-alt',
-            'can'     => 'sidebar.inventario',
-            'submenu' => [
-                [
-                    'text' => 'Unidad de Medida',
-                    'icon' => 'far fa-circle',
-                    'route' => 'admin.unidadmedida.index',
-                ],
-                [
-                    'text' => 'Catálogo de Materiales',
-                    'icon' => 'far fa-circle',
-                    'route' => 'admin.materiales.index',
-                ],
-                [
-                    'text' => 'Transferencia Materiales',
-                    'icon' => 'far fa-circle',
-                    'route' => 'admin.transferencias.materiales.index',
-                ],
-
-            ],
-        ],
-
-        [
-            'text'    => 'Entradas y Salidas',
-            'icon'    => 'fas fa-pen-alt',
-            'can'     => 'sidebar.inventario',
-            'submenu' => [
-                [
-                    'text' => 'Registro de Entradas',
-                    'icon' => 'far fa-circle',
-                    'route' => 'admin.entrada.registro.index',
-                ],
-                [
-                    'text' => 'Registro de Salidas',
-                    'icon' => 'far fa-circle',
-                    'route' => 'admin.salida.registro.index',
-                ],
-            ],
-        ],
 
 
 
-        [
-            'text'    => 'Historial',
-            'icon'    => 'fas fa-pen-alt',
-            'can'     => 'sidebar.inventario',
-            'submenu' => [
-                [
-                    'text' => 'Entradas',
-                    'icon' => 'far fa-circle',
-                    'route' => 'admin.historial.entradas.index',
-                ],
-                [
-                    'text' => 'Salidas',
-                    'icon' => 'far fa-circle',
-                    'route' => 'admin.historial.salidas.index',
-                ],
-                [
-                    'text' => 'Transferencias',
-                    'icon' => 'far fa-circle',
-                    'route' => 'admin.historial.transferencias.index',
-                ],
-            ],
-        ],
 
-        [
-            'text'    => 'Empleados',
-            'icon'    => 'fas fa-pen-alt',
-            'can'     => 'sidebar.inventario',
-            'submenu' => [
-                [
-                    'text' => 'Cargos',
-                    'icon' => 'far fa-circle',
-                    'route' => 'admin.cargo.index',
-                ],
-            ],
-        ],
+
+
+
+
 
         [
             'text'    => 'Configuración',

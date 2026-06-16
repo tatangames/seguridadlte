@@ -1,0 +1,36 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * ENTRADAS DETALLE
+     */
+    public function up(): void
+    {
+        Schema::create('entradas_detalle', function (Blueprint $table) {
+            $table->id();
+            $table->bigInteger('id_entradas')->unsigned();
+            $table->bigInteger('id_material')->unsigned();
+
+            $table->integer('cantidad_inicial');
+
+            // 4 DECIMALES PARA PRECIO UNITARIO
+            $table->decimal('precio', 10,4);
+
+            $table->foreign('id_entradas')->references('id')->on('entradas');
+            $table->foreign('id_material')->references('id')->on('materiales');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('entradas_detalle');
+    }
+};

@@ -8,12 +8,12 @@ use App\Http\Controllers\Sistema\RolesController;
 use App\Http\Controllers\Sistema\PerfilController;
 use App\Http\Controllers\Sistema\PermisoController;
 use App\Http\Controllers\Sistema\ConfiguracionController;
-use App\Http\Controllers\Sistema\RepuestosController;
 use App\Http\Controllers\Sistema\TipoProyectoController;
 use App\Http\Controllers\Sistema\SalidasController;
 use App\Http\Controllers\Sistema\HistorialController;
 use App\Http\Controllers\Sistema\ReportesController;
 use App\Http\Controllers\Sistema\ReservasController;
+use App\Http\Controllers\Sistema\MaterialesController;
 
 
 Route::get('/', [LoginController::class,'vistaLoginForm'])->name('login.admin');
@@ -125,7 +125,12 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('/admin/cargo/editar', [ConfiguracionController::class,'actualizarCargo']);
 
     // --- MATERIALES ---
-    Route::post('/admin/materiales/index', [RepuestosController::class,'vistaMateriales']);
+    Route::get('/admin/materiales/index', [MaterialesController::class,'vistaMateriales'])->name('admin.materiales.index');
+    Route::get('/admin/materiales/tabla', [MaterialesController::class,'tablaMateriales']);
+
+    Route::post('/admin/materiales/nuevo', [MaterialesController::class, 'nuevoMaterial']);
+    Route::post('/admin/materiales/informacion', [MaterialesController::class, 'informacionMaterial']);
+    Route::post('/admin/materiales/editar', [MaterialesController::class, 'editarMaterial']);
 
 
 
@@ -156,12 +161,7 @@ Route::middleware('auth:admin')->group(function () {
 
 
 
-    // --- INVENTARIO ---
-    Route::get('/admin/inventario/index', [RepuestosController::class,'index'])->name('admin.materiales.index');
-    Route::get('/admin/inventario/tabla/index', [RepuestosController::class,'tablaMateriales']);
-    Route::post('/admin/inventario/nuevo', [RepuestosController::class, 'nuevoMaterial']);
-    Route::post('/admin/inventario/informacion', [RepuestosController::class, 'informacionMaterial']);
-    Route::post('/admin/inventario/editar', [RepuestosController::class, 'editarMaterial']);
+
 
     // --- REGISTRO DE UN PROYECTO ---
     Route::get('/admin/proyecto/index', [TipoProyectoController::class,'index'])->name('admin.tiposproyecto.index');
@@ -170,11 +170,6 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('/admin/proyecto/informacion', [TipoProyectoController::class, 'informacionProyecto']);
     Route::post('/admin/proyecto/editar', [TipoProyectoController::class, 'editarProyecto']);
 
-    // --- REGISTRAR ENTRADA ---
-    Route::get('/admin/registro/entrada', [RepuestosController::class,'indexRegistroEntrada'])->name('admin.entrada.registro.index');
-    Route::post('/admin/buscar/material',  [RepuestosController::class,'buscadorMaterial']);
-    Route::post('/admin/entradas/guardar',  [RepuestosController::class,'guardarEntrada']);
-    Route::post('/admin/inventario/proyectos', [RepuestosController::class, 'proyectosPorMaterial']);
 
     // --- REGISTRAR SALIDA ---
     Route::get('/admin/registro/salida', [SalidasController::class,'indexRegistroSalida'])->name('admin.salida.registro.index');
