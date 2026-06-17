@@ -13,6 +13,8 @@ use App\Http\Controllers\Sistema\HistorialController;
 use App\Http\Controllers\Sistema\ReportesController;
 use App\Http\Controllers\Sistema\MaterialesController;
 use App\Http\Controllers\Sistema\RegistrosController;
+use App\Http\Controllers\Sistema\UnidadEmpleadoController;
+use App\Http\Controllers\Sistema\EmpleadoController;
 
 
 Route::get('/', [LoginController::class,'vistaLoginForm'])->name('login.admin');
@@ -152,9 +154,7 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/admin/salidas/vista', [RegistrosController::class,'indexRegistroSalida'])->name('admin.salidas.registro.index');
     Route::post('/admin/buscar/material/disponible',  [RegistrosController::class,'buscadorMaterialDisponible']);
     Route::post('/admin/buscar/material/disponibilidad', [RegistrosController::class, 'infoBodegaMaterialDetalleFila']);
-
     Route::post('/admin/salida/guardar',  [RegistrosController::class,'guardarSalidaMateriales']);
-
     Route::post('/admin/salidas/pdf-temporal', [RegistrosController::class, 'generarPdfTemporal']);
     Route::get('/admin/salidas/pdfcompleto/{idsalida}', [RegistrosController::class,'generarPdfSalida']);
     Route::post('/admin/empleados/buscarunidad', [RegistrosController::class,'buscarUnidadConDistrito']);
@@ -163,8 +163,24 @@ Route::middleware('auth:admin')->group(function () {
 
 
 
+    // UNIDAD EMPLEADO
+    Route::get('/admin/unidadempleado/index', [UnidadEmpleadoController::class,'vistaUnidadEmpleado'])->name('admin.unidadempleado.index');
+    Route::get('/admin/unidadempleado/tabla', [UnidadEmpleadoController::class, 'tablaUnidadEmpleado']);
+    Route::post('/admin/unidadempleado/nuevo', [UnidadEmpleadoController::class,'nuevoUnidadEmpleado']);
+    Route::post('/admin/unidadempleado/informacion', [UnidadEmpleadoController::class,'infoUnidadEmpleado']);
+    Route::post('/admin/unidadempleado/editar', [UnidadEmpleadoController::class,'actualizarUnidadEmpleado']);
+    Route::post('/admin/unidadempleado/jefeinmediato/editar', [UnidadEmpleadoController::class,'editarJefeInmediato']);
+    Route::post('/admin/unidadempleado/jefes/informacion', [UnidadEmpleadoController::class, 'informacionJefesUnidad']);
+    Route::post('/admin/unidadempleado/jefes/agregar',     [UnidadEmpleadoController::class, 'agregarJefeUnidad']);
+    Route::post('/admin/unidadempleado/jefes/quitar',      [UnidadEmpleadoController::class, 'quitarJefeUnidad']);
 
-
+    // EMPLEADOS
+    Route::get('/admin/empleados/index',         [EmpleadoController::class, 'index']        )->name('admin.empleados.index');
+    Route::get('/admin/empleados/tabla',         [EmpleadoController::class, 'tabla']        );
+    Route::post('/admin/empleados/buscarunidad', [EmpleadoController::class, 'buscarUnidad'] );
+    Route::post('/admin/empleados/nuevo',        [EmpleadoController::class, 'nuevo']        );
+    Route::post('/admin/empleados/informacion',  [EmpleadoController::class, 'informacion']  );
+    Route::post('/admin/empleados/actualizar',   [EmpleadoController::class, 'actualizar']   );
 
 
 

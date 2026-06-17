@@ -340,7 +340,28 @@ return [
             'route' => 'admin.salidas.registro.index',
         ],
 
-
+        [
+            'text'    => 'Empleados',
+            'icon'    => 'fas fa-pen-alt',
+            'can'     => 'sidebar.inventario',
+            'submenu' => [
+                [
+                    'text' => 'Unidad Empleado',
+                    'icon' => 'far fa-circle',
+                    'route' => 'admin.unidadempleado.index',
+                ],
+                [
+                    'text' => 'Empleados',
+                    'icon' => 'far fa-circle',
+                    'route' => 'admin.empleados.index',
+                ],
+                [
+                    'text' => 'Cargos',
+                    'icon' => 'far fa-circle',
+                    'route' => 'admin.cargo.index',
+                ],
+            ],
+        ],
 
 
 
