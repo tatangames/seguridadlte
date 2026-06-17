@@ -8,12 +8,11 @@ use App\Http\Controllers\Sistema\RolesController;
 use App\Http\Controllers\Sistema\PerfilController;
 use App\Http\Controllers\Sistema\PermisoController;
 use App\Http\Controllers\Sistema\ConfiguracionController;
-use App\Http\Controllers\Sistema\TipoProyectoController;
 use App\Http\Controllers\Sistema\SalidasController;
 use App\Http\Controllers\Sistema\HistorialController;
 use App\Http\Controllers\Sistema\ReportesController;
-use App\Http\Controllers\Sistema\ReservasController;
 use App\Http\Controllers\Sistema\MaterialesController;
+use App\Http\Controllers\Sistema\RegistrosController;
 
 
 Route::get('/', [LoginController::class,'vistaLoginForm'])->name('login.admin');
@@ -124,6 +123,13 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('/admin/cargo/informacion', [ConfiguracionController::class,'infoCargo']);
     Route::post('/admin/cargo/editar', [ConfiguracionController::class,'actualizarCargo']);
 
+    // --- JEFE FIRMA  ---
+    Route::get('/admin/jefefirma/index', [ConfiguracionController::class,'vistaJefeFirma'])->name('admin.jefefirma.index');
+    Route::get('/admin/jefefirma/tabla/index', [ConfiguracionController::class,'tablaJefeFirma']);
+    Route::post('/admin/jefefirma/nuevo', [ConfiguracionController::class,'nuevoJefeFirma']);
+    Route::post('/admin/jefefirma/informacion', [ConfiguracionController::class,'infoJefeFirma']);
+    Route::post('/admin/jefefirma/editar', [ConfiguracionController::class,'actualizarJefeFirma']);
+
     // --- MATERIALES ---
     Route::get('/admin/materiales/index', [MaterialesController::class,'vistaMateriales'])->name('admin.materiales.index');
     Route::get('/admin/materiales/tabla', [MaterialesController::class,'tablaMateriales']);
@@ -132,6 +138,27 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('/admin/materiales/informacion', [MaterialesController::class, 'informacionMaterial']);
     Route::post('/admin/materiales/editar', [MaterialesController::class, 'editarMaterial']);
 
+    // REGISTRO DE ENTRADAS
+    Route::get('/admin/entradas/vista', [RegistrosController::class,'indexRegistroEntrada'])->name('admin.entrada.registro.index');
+    Route::post('/admin/buscar/material',  [RegistrosController::class,'buscadorMaterialGlobal']);
+    Route::post('/admin/entradas/guardar',  [RegistrosController::class,'guardarEntrada']);
+    Route::post('/admin/buscar/materiales/porcodigo',  [RegistrosController::class,'buscarMaterialesPorCodigo']);
+
+
+
+
+
+    // REGISTRO DE SALIDAS
+    Route::get('/admin/salidas/vista', [RegistrosController::class,'indexRegistroSalida'])->name('admin.salidas.registro.index');
+    Route::post('/admin/buscar/material/disponible',  [RegistrosController::class,'buscadorMaterialDisponible']);
+    Route::post('/admin/buscar/material/disponibilidad', [RegistrosController::class, 'infoBodegaMaterialDetalleFila']);
+
+    Route::post('/admin/salida/guardar',  [RegistrosController::class,'guardarSalidaMateriales']);
+
+    Route::post('/admin/salidas/pdf-temporal', [RegistrosController::class, 'generarPdfTemporal']);
+    Route::get('/admin/salidas/pdfcompleto/{idsalida}', [RegistrosController::class,'generarPdfSalida']);
+    Route::post('/admin/empleados/buscarunidad', [RegistrosController::class,'buscarUnidadConDistrito']);
+    Route::post('/admin/empleados/buscarunidad-empleado', [RegistrosController::class,'buscarUnidadConDistritoEmpleado']);
 
 
 
@@ -161,26 +188,6 @@ Route::middleware('auth:admin')->group(function () {
 
 
 
-
-
-    // --- REGISTRO DE UN PROYECTO ---
-    Route::get('/admin/proyecto/index', [TipoProyectoController::class,'index'])->name('admin.tiposproyecto.index');
-    Route::get('/admin/proyecto/tabla/index', [TipoProyectoController::class,'tablaProyectos']);
-    Route::post('/admin/proyecto/nuevo', [TipoProyectoController::class, 'nuevoProyecto']);
-    Route::post('/admin/proyecto/informacion', [TipoProyectoController::class, 'informacionProyecto']);
-    Route::post('/admin/proyecto/editar', [TipoProyectoController::class, 'editarProyecto']);
-
-
-    // --- REGISTRAR SALIDA ---
-    Route::get('/admin/registro/salida', [SalidasController::class,'indexRegistroSalida'])->name('admin.salida.registro.index');
-    Route::post('/admin/salida/guardar',  [SalidasController::class,'guardarSalida']);
-    Route::post('/admin/buscar/material/disponible',  [SalidasController::class,'buscadorMaterialDisponible']);
-    Route::post('/admin/buscar/material/disponibilidad', [SalidasController::class, 'infoBodegaMaterialDetalleFila']);
-
-
-    // --- CIERRE DE PROYECTOS ---
-    Route::get('/admin/cierre/proyectos', [SalidasController::class,'indexTransferencias'])->name('admin.transferencias.index');
-    Route::post('/admin/generar/salida/transferencia',  [SalidasController::class,'generarSalidaTransferencia']);
 
     // --- HISTORIAL / ENTRADAS ---
     Route::get('/admin/historial/entradas', [HistorialController::class,'indexHistorialEntradas'])->name('admin.historial.entradas.index');

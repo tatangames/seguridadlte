@@ -20,6 +20,8 @@ return new class extends Migration
             $table->boolean('jefe')->default(false);
             $table->unsignedBigInteger('id_jefe')->nullable();
 
+            $table->boolean('activo')->default(true);
+
             $table->foreign('id_jefe')->references('id')->on('empleado');
         });
     }

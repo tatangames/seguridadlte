@@ -22,7 +22,8 @@ return new class extends Migration
             $table->string('jefe_inmediato', 300)->nullable();
 
             $table->string('material_linea', 400)->nullable();
-
+            $table->string('jefe_firma', 100)->nullable();
+            $table->string('cargo_firma', 100)->nullable();
         });
     }
 

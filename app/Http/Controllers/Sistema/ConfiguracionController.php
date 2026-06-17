@@ -7,6 +7,7 @@ use App\Models\Cargo;
 use App\Models\Color;
 use App\Models\Cuenta;
 use App\Models\Departamentos;
+use App\Models\JefeFirma;
 use App\Models\Marca;
 use App\Models\Normativa;
 use App\Models\ObjetoEspecifico;
@@ -797,6 +798,94 @@ class ConfiguracionController extends Controller
 
         return ['success' => 1];
     }
+
+
+
+
+
+    //******************** JEFE FIRMA *************************************************************
+
+
+    public function vistaJefeFirma()
+    {
+        return view('backend.admin.configuracion.jefefirma.vistajefefirma');
+    }
+
+    public function tablaJefeFirma()
+    {
+        $lista = JefeFirma::orderBy('nombre', 'ASC')->get();
+
+        return view('backend.admin.configuracion.jefefirma.tablajefefirma', compact('lista'));
+    }
+
+
+    public function nuevoJefeFirma(Request $request)
+    {
+        $regla = array(
+            'nombre' => 'required'
+        );
+
+        $validar = Validator::make($request->all(), $regla);
+
+        if ($validar->fails()) {
+            return ['success' => 0];
+        }
+        DB::beginTransaction();
+
+        try {
+            $dato = new JefeFirma();
+            $dato->nombre = $request->nombre;
+            $dato->cargo = $request->cargo;
+            $dato->save();
+
+            DB::commit();
+            return ['success' => 1];
+        } catch (\Throwable $e) {
+            Log::info('error ' . $e);
+            DB::rollback();
+            return ['success' => 99];
+        }
+    }
+
+
+    public function infoJefeFirma(Request $request)
+    {
+        $regla = array(
+            'id' => 'required'
+        );
+
+        $validar = Validator::make($request->all(), $regla);
+
+        if ($validar->fails()) {
+            return ['success' => 0];
+        }
+
+        $info = JefeFirma::where('id', $request->id)->first();
+
+        return ['success' => 1, 'info' => $info];
+    }
+
+    public function actualizarJefeFirma(Request $request)
+    {
+        $regla = array(
+            'id' => 'required',
+            'nombre' => 'required'
+        );
+
+        $validar = Validator::make($request->all(), $regla);
+
+        if ($validar->fails()) {
+            return ['success' => 0];
+        }
+
+        JefeFirma::where('id', $request->id)->update([
+            'nombre' => $request->nombre,
+            'cargo' => $request->cargo
+        ]);
+
+        return ['success' => 1];
+    }
+
 
 
 }

@@ -7,17 +7,17 @@
                         <table id="tabla" class="table table-bordered table-striped">
                             <thead>
                             <tr>
-                                <th style="width: 5%">ID</th>
-                                <th style="width: 80%">Proyecto</th>
-                                <th style="width: 13%">Opciones</th>
+                                <th style="width: 40%">Nombre</th>
+                                <th style="width: 20%">Cargo</th>
+                                <th style="width: 10%">Opciones</th>
                             </tr>
                             </thead>
                             <tbody>
 
                             @foreach($lista as $dato)
                                 <tr>
-                                    <td>{{ $dato->id }}</td>
                                     <td>{{ $dato->nombre }}</td>
+                                    <td>{{ $dato->cargo }}</td>
                                     <td>
                                         <button type="button" class="btn btn-primary btn-xs" onclick="informacion({{ $dato->id }})">
                                             <i class="fas fa-eye" title="Editar"></i>&nbsp; Editar
@@ -34,4 +34,5 @@
         </div>
     </div>
 </section>
+
 

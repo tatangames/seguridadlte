@@ -329,7 +329,16 @@ return [
             'icon' => 'far fa-circle',
             'route' => 'admin.materiales.index',
         ],
-
+        [
+            'text' => 'Entradas',
+            'icon' => 'far fa-circle',
+            'route' => 'admin.entrada.registro.index',
+        ],
+        [
+            'text' => 'Salidas',
+            'icon' => 'far fa-circle',
+            'route' => 'admin.salidas.registro.index',
+        ],
 
 
 
@@ -390,6 +399,11 @@ return [
                     'text' => 'Proveedores',
                     'icon' => 'far fa-circle',
                     'route' => 'admin.proveedor.index',
+                ],
+                [
+                    'text' => 'Jefe Firma',
+                    'icon' => 'far fa-circle',
+                    'route' => 'admin.jefefirma.index',
                 ],
 
             ],
