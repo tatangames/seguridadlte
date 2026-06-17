@@ -21,18 +21,22 @@ class MaterialesController extends Controller
 
     public function vistaMateriales()
     {
-        $arrayUnidades  = UnidadMedida::orderBy('nombre', 'ASC')->get();
-        $arrayMarcas    = Marca::orderBy('nombre', 'ASC')->get();
-        $arrayNormativa = Normativa::orderBy('nombre', 'ASC')->get();
-        $arrayColor     = Color::orderBy('nombre', 'ASC')->get();
-        $arrayTalla     = Talla::orderBy('nombre', 'ASC')->get();
-        $lista          = $this->obtenerListaMateriales();
+        $arrayUnidades        = UnidadMedida::orderBy('nombre', 'ASC')->get();
+        $arrayMarcas          = Marca::orderBy('nombre', 'ASC')->get();
+        $arrayNormativa       = Normativa::orderBy('nombre', 'ASC')->get();
+        $arrayColor           = Color::orderBy('nombre', 'ASC')->get();
+        $arrayTalla           = Talla::orderBy('nombre', 'ASC')->get();
+        $arrayObjetoEspecifico = DB::table('objeto_especifico')
+            ->orderBy('codigo', 'ASC')
+            ->get();
+        $lista = $this->obtenerListaMateriales();
 
         return view('backend.admin.materiales.vistamateriales', compact(
             'arrayUnidades', 'arrayMarcas', 'arrayNormativa',
-            'arrayColor', 'arrayTalla', 'lista',
+            'arrayColor', 'arrayTalla', 'lista', 'arrayObjetoEspecifico',
         ));
     }
+
 
     public function tablaMateriales()
     {
@@ -78,89 +82,93 @@ class MaterialesController extends Controller
 
 
 
-    public function nuevoMaterial(Request $request){
-
-        $regla = array(
-            'nombre' => 'required',
-            'unidad' => 'required',
-            'marca' => 'required',
-            'normativa' => 'required',
-        );
-
-        // codigo, otros, color, talla, fecha
+    public function nuevoMaterial(Request $request)
+    {
+        $regla = [
+            'nombre'          => 'required',
+            'unidad'          => 'required',
+            'marca'           => 'required',
+            'normativa'       => 'required',
+            'objeto_especifico' => 'required',
+        ];
 
         $validar = Validator::make($request->all(), $regla);
-
-        if ($validar->fails()){ return ['success' => 0];}
+        if ($validar->fails()) { return ['success' => 0]; }
 
         $registro = new Materiales();
-        $registro->id_medida = $request->unidad;
-        $registro->id_marca = $request->marca;
-        $registro->id_normativa = $request->normativa;
-        $registro->id_color = $request->color;
-        $registro->id_talla = $request->talla;
-        $registro->nombre = $request->nombre;
-        $registro->codigo = $request->codigo;
-        $registro->otros = $request->otros;
-        $registro->meses_cambio = $request->fecha;
+        $registro->id_medida        = $request->unidad;
+        $registro->id_marca         = $request->marca;
+        $registro->id_normativa     = $request->normativa;
+        $registro->id_color         = $request->color;
+        $registro->id_talla         = $request->talla;
+        $registro->nombre           = $request->nombre;
+        $registro->codigo           = $request->codigo;
+        $registro->otros            = $request->otros;
+        $registro->meses_cambio     = $request->fecha;
+        $registro->id_objespecifico = $request->objeto_especifico;
 
-        if($registro->save()){
+        if ($registro->save()) {
             return ['success' => 1];
-        }else{
+        } else {
             return ['success' => 2];
         }
     }
 
-    public function informacionMaterial(Request $request){
-        $regla = array(
-            'id' => 'required',
-        );
+    public function informacionMaterial(Request $request)
+    {
+        $regla    = ['id' => 'required'];
+        $validar  = Validator::make($request->all(), $regla);
+        if ($validar->fails()) { return ['success' => 0]; }
 
-        $validar = Validator::make($request->all(), $regla);
+        if ($lista = Materiales::where('id', $request->id)->first()) {
+            $arrayUnidad          = UnidadMedida::orderBy('nombre', 'ASC')->get();
+            $arrayMarca           = Marca::orderBy('nombre', 'ASC')->get();
+            $arrayNormativa       = Normativa::orderBy('nombre', 'ASC')->get();
+            $arrayColor           = Color::orderBy('nombre', 'ASC')->get();
+            $arrayTalla           = Talla::orderBy('nombre', 'ASC')->get();
+            $arrayObjetoEspecifico = DB::table('objeto_especifico')
+                ->orderBy('codigo', 'ASC')
+                ->get();
 
-        if ($validar->fails()){ return ['success' => 0];}
-
-        if($lista = Materiales::where('id', $request->id)->first()){
-
-            $arrayUnidad = UnidadMedida::orderBy('nombre', 'ASC')->get();
-            $arrayMarca = Marca::orderBy('nombre', 'ASC')->get();
-            $arrayNormativa = Normativa::orderBy('nombre', 'ASC')->get();
-            $arrayColor = Color::orderBy('nombre', 'ASC')->get();
-            $arrayTalla = Talla::orderBy('nombre', 'ASC')->get();
-
-            return ['success' => 1, 'material' => $lista, 'unidad' => $arrayUnidad,
-                'marca' => $arrayMarca, 'normativa' => $arrayNormativa,
-                'color' => $arrayColor, 'talla' => $arrayTalla];
-        }else{
+            return [
+                'success'           => 1,
+                'material'          => $lista,
+                'unidad'            => $arrayUnidad,
+                'marca'             => $arrayMarca,
+                'normativa'         => $arrayNormativa,
+                'color'             => $arrayColor,
+                'talla'             => $arrayTalla,
+                'objeto_especifico' => $arrayObjetoEspecifico,
+            ];
+        } else {
             return ['success' => 2];
         }
     }
 
-    public function editarMaterial(Request $request){
-
-        $regla = array(
-            'nombre' => 'required',
-            'unidad' => 'required',
-            'marca' => 'required',
-            'normativa' => 'required',
-        );
-
-        // codigo, COLOR Y TALLA, otros, fecha
+    public function editarMaterial(Request $request)
+    {
+        $regla = [
+            'nombre'            => 'required',
+            'unidad'            => 'required',
+            'marca'             => 'required',
+            'normativa'         => 'required',
+            'objeto_especifico' => 'required',
+        ];
 
         $validar = Validator::make($request->all(), $regla);
-
-        if ($validar->fails()){ return ['success' => 0];}
+        if ($validar->fails()) { return ['success' => 0]; }
 
         Materiales::where('id', $request->id)->update([
-            'id_medida' => $request->unidad,
-            'id_marca' => $request->marca,
-            'id_normativa' => $request->normativa,
-            'id_color' => $request->color,
-            'id_talla' => $request->talla,
-            'nombre' => $request->nombre,
-            'codigo' => $request->codigo,
-            'otros' => $request->otros,
-            'meses_cambio' => $request->fecha,
+            'id_medida'         => $request->unidad,
+            'id_marca'          => $request->marca,
+            'id_normativa'      => $request->normativa,
+            'id_color'          => $request->color,
+            'id_talla'          => $request->talla,
+            'nombre'            => $request->nombre,
+            'codigo'            => $request->codigo,
+            'otros'             => $request->otros,
+            'meses_cambio'      => $request->fecha,
+            'id_objespecifico'  => $request->objeto_especifico,
         ]);
 
         return ['success' => 1];

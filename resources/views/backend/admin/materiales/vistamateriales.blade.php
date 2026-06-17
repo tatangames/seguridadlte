@@ -381,6 +381,24 @@
                                     </div>
                                 </div>
 
+                                {{-- MODAL AGREGAR — sección Clasificación, segunda fila --}}
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label class="form-label-styled">
+                                                Código Presupuestario <span class="required-star">*</span>
+                                            </label>
+                                            <select class="form-control" id="select-objeto-nuevo">
+                                                <option value="">Seleccione una opción</option>
+                                                @foreach($arrayObjetoEspecifico as $sel)
+                                                    <option value="{{ $sel->id }}">{{ $sel->codigo }} — {{ $sel->nombre }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+
                                 <div class="modal-section-title"><i class="fas fa-sticky-note" style="margin-right:5px"></i>Notas</div>
                                 <div class="row">
                                     <div class="col-md-12">
@@ -474,6 +492,18 @@
                                                        id="fechacambio-editar" style="padding-right:50px">
                                                 <span style="position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:11px; color:#94a3b8">meses</span>
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- MODAL EDITAR — sección Clasificación, segunda fila --}}
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label class="form-label-styled">
+                                                Código Presupuestario <span class="required-star">*</span>
+                                            </label>
+                                            <select class="form-control" id="select-objeto-editar"></select>
                                         </div>
                                     </div>
                                 </div>
@@ -631,9 +661,10 @@
             iniciarDataTable();
 
             ['select-unidad-nuevo','select-marca-nuevo','select-normativa-nuevo',
-                'select-color-nuevo','select-talla-nuevo',
+                'select-color-nuevo','select-talla-nuevo','select-objeto-nuevo',       // ← nuevo
                 'select-unidad-editar','select-marca-editar','select-normativa-editar',
-                'select-color-editar','select-talla-editar'].forEach(initSelect2);
+                'select-color-editar','select-talla-editar','select-objeto-editar'     // ← nuevo
+            ].forEach(initSelect2);
         });
 
         // ── Filtros ──────────────────────────────────────────────────────────
@@ -695,7 +726,8 @@
         function modalAgregar() {
             document.getElementById("formulario-nuevo").reset();
             ['select-unidad-nuevo','select-marca-nuevo','select-normativa-nuevo',
-                'select-color-nuevo','select-talla-nuevo'].forEach(function (id) {
+                'select-color-nuevo','select-talla-nuevo','select-objeto-nuevo'    // ← nuevo
+            ].forEach(function (id) {
                 $('#' + id).prop('selectedIndex', 0).trigger('change');
             });
             $('#modalAgregar').modal({ backdrop: 'static', keyboard: false });
@@ -710,6 +742,7 @@
             var normativa   = document.getElementById('select-normativa-nuevo').value;
             var color       = document.getElementById('select-color-nuevo').value;
             var talla       = document.getElementById('select-talla-nuevo').value;
+            var objeto      = document.getElementById('select-objeto-nuevo').value;
             var otros       = document.getElementById('otros-nuevo').value.trim();
             var fechaCambio = document.getElementById('fechacambio-nuevo').value;
 
@@ -717,6 +750,7 @@
             if (!unidad)    { toastr.error('La Unidad de Medida es requerida'); return; }
             if (!marca)     { toastr.error('La Marca es requerida');            return; }
             if (!normativa) { toastr.error('La Normativa es requerida');        return; }
+            if (!objeto)    { toastr.error('El Código Presupuestario es requerido');     return; }  // ← nuevo
 
             var reglaEntero = /^[0-9]\d*$/;
             if (fechaCambio !== '') {
@@ -731,6 +765,7 @@
             fd.append('normativa', normativa); fd.append('color', color);
             fd.append('talla', talla);     fd.append('otros', otros);
             fd.append('fecha', fechaCambio);
+            fd.append('objeto_especifico', objeto);
 
             axios.post(urlAdmin + '/admin/materiales/nuevo', fd)
                 .then(res => {
@@ -762,8 +797,10 @@
                     $('#otros-editar').val(d.material.otros);
                     $('#fechacambio-editar').val(d.material.meses_cambio);
 
+                    // Limpiar todos los selects
                     ['select-unidad-editar','select-marca-editar','select-normativa-editar',
-                        'select-color-editar','select-talla-editar'].forEach(function (sid) {
+                        'select-color-editar','select-talla-editar','select-objeto-editar'
+                    ].forEach(function (sid) {
                         document.getElementById(sid).options.length = 0;
                     });
 
@@ -781,6 +818,15 @@
                     poblarSelect('select-normativa-editar', d.normativa, d.material.id_normativa, false);
                     poblarSelect('select-color-editar',     d.color,     d.material.id_color,     true);
                     poblarSelect('select-talla-editar',     d.talla,     d.material.id_talla,     true);
+
+                    // objeto_especifico se muestra como "codigo — nombre", no usa poblarSelect genérico
+                    $.each(d.objeto_especifico, function (k, v) {
+                        var sel = (d.material.id_objespecifico == v.id) ? ' selected="selected"' : '';
+                        $('#select-objeto-editar').append(
+                            '<option value="' + v.id + '"' + sel + '>' + v.codigo + ' — ' + v.nombre + '</option>'
+                        );
+                    });
+                    $('#select-objeto-editar').trigger('change');
                 })
                 .catch(() => { closeLoading(); toastr.error('Información no encontrada'); });
         }
@@ -795,6 +841,7 @@
             var normativa   = document.getElementById('select-normativa-editar').value;
             var color       = document.getElementById('select-color-editar').value;
             var talla       = document.getElementById('select-talla-editar').value;
+            var objeto      = document.getElementById('select-objeto-editar').value;
             var otros       = document.getElementById('otros-editar').value.trim();
             var fechaCambio = document.getElementById('fechacambio-editar').value;
 
@@ -802,6 +849,7 @@
             if (!unidad)    { toastr.error('La Unidad de Medida es requerida'); return; }
             if (!marca)     { toastr.error('La Marca es requerida');            return; }
             if (!normativa) { toastr.error('La Normativa es requerida');        return; }
+            if (!objeto)    { toastr.error('El Código Presupuestario es requerido'); return; }  // ← nuevo
 
             var reglaEntero = /^[0-9]\d*$/;
             if (fechaCambio !== '') {
@@ -816,6 +864,7 @@
             fd.append('marca', marca);     fd.append('normativa', normativa);
             fd.append('color', color);     fd.append('talla', talla);
             fd.append('otros', otros);     fd.append('fecha', fechaCambio);
+            fd.append('objeto_especifico', objeto);
 
             axios.post(urlAdmin + '/admin/materiales/editar', fd)
                 .then(res => {
