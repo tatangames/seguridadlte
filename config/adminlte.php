@@ -363,14 +363,6 @@ return [
             ],
         ],
 
-
-
-
-
-
-
-
-
         [
             'text'    => 'Configuración',
             'icon'    => 'fas fa-pen-alt',
@@ -453,44 +445,12 @@ return [
         ],
 
 
+
         [
-            'text'    => 'Reportes',
-            'icon'    => 'fas fa-pen-alt',
-            'can'     => 'sidebar.inventario',
-            'submenu' => [
-                [
-                    'text' => 'Entradas / Salidas',
-                    'icon' => 'far fa-circle',
-                    'route' => 'admin.reporte.inventario.entradaproyecto.index',
-                ],
-                [
-                    'text' => 'Inventario Proyecto',
-                    'icon' => 'far fa-circle',
-                    'route' => 'admin.reporte.inventario.tengoporproyecto.index',
-                ],
-
-
-                [
-                    'text' => 'Proyecto Cerrado',
-                    'icon' => 'far fa-circle',
-                    'route' => 'reporte.proyecto.cerrado.index',
-                ],
-
-
-                [
-                    'text' => 'Por Periodos',
-                    'icon' => 'far fa-circle',
-                    'route' => 'reporte.proyecto.porperiodos.index',
-                ],
-
-
-
-            ],
+            'text' => 'Reportes',
+            'icon' => 'far fa-circle',
+            'route' => 'admin.reportes.index',
         ],
-
-
-
-
 
 
 
