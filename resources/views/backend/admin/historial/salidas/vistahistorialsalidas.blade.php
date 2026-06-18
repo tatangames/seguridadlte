@@ -14,8 +14,6 @@
 
 @section('content_top_nav_right')
     <link href="{{ asset('css/toastr.min.css') }}" type="text/css" rel="stylesheet"/>
-    <link href="{{ asset('css/select2.min.css') }}" type="text/css" rel="stylesheet">
-    <link href="{{ asset('css/select2-bootstrap-5-theme.min.css') }}" type="text/css" rel="stylesheet">
 
     <li class="nav-item dropdown">
         <a href="#" class="nav-link" data-toggle="dropdown">
@@ -28,7 +26,6 @@
             </a>
         </div>
     </li>
-
     <li class="nav-item">
         <form action="{{ route('admin.logout') }}" method="POST" class="d-inline">
             @csrf
@@ -41,76 +38,13 @@
 @endsection
 
 @section('content')
+
     <div id="divcontenedor">
-
-        {{-- ══ FILTROS ══ --}}
-        <section class="content" style="margin-bottom:0">
-            <div class="container-fluid">
-                <div class="card card-blue">
-                    <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-filter mr-1"></i> Filtros</h3>
-                    </div>
-                    <div class="card-body">
-
-                        {{-- Fila 1: Proyecto + Fechas + Botones --}}
-                        <div class="row align-items-end">
-                            <div class="col-md-4">
-                                <label class="font-weight-bold">Proyecto</label>
-                                <select class="form-control" id="filtro-proyecto">
-                                    <option value="">— Todos —</option>
-                                    @foreach($arrayProyectos as $p)
-                                        <option value="{{ $p->id }}"
-                                                data-cerrado="{{ $p->transferido ? '1' : '0' }}">
-                                            {{ $p->nombre }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="font-weight-bold">Fecha desde</label>
-                                <input type="date" class="form-control" id="filtro-fecha-desde">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="font-weight-bold">Fecha hasta</label>
-                                <input type="date" class="form-control" id="filtro-fecha-hasta">
-                            </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-primary btn-block mb-1" onclick="recargar()">
-                                    <i class="fas fa-search mr-1"></i> Filtrar
-                                </button>
-                                <button class="btn btn-secondary btn-block" onclick="limpiarFiltros()">
-                                    <i class="fas fa-times mr-1"></i> Limpiar
-                                </button>
-                            </div>
-                        </div>
-
-                        {{-- Fila 2: Búsqueda por material --}}
-                        <div class="row align-items-end mt-3">
-                            <div class="col-md-6">
-                                <label class="font-weight-bold">
-                                    <i class="fas fa-box mr-1 text-muted"></i> Buscar por material (nombre)
-                                </label>
-                                <input type="text"
-                                       class="form-control"
-                                       id="filtro-material"
-                                       placeholder="Ej: cemento, MAT-001 ...">
-                            </div>
-                            <div class="col-md-6 d-flex align-items-end">
-                                <small class="text-muted">
-                                    Filtra las salidas que contengan ese material en su detalle.
-                                </small>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </section>
 
         {{-- ══ TABLA ══ --}}
         <section class="content">
             <div class="container-fluid">
-                <div class="card card-blue">
+                <div class="card card-primary">
                     <div class="card-header">
                         <h3 class="card-title">Listado de Salidas</h3>
                     </div>
@@ -171,11 +105,7 @@
                     <h5 class="modal-title text-white">
                         <i class="fas fa-list mr-2"></i>
                         Detalle de Salida —
-                        <span id="detalle-proyecto"></span>
                         <small class="ml-2" id="detalle-fecha"></small>
-                        <span id="detalle-badge-cerrado" class="badge badge-danger ml-2" style="display:none;">
-                            Proyecto Cerrado
-                        </span>
                     </h5>
                     <button type="button" class="close text-white" data-dismiss="modal">
                         <span>&times;</span>
@@ -190,17 +120,16 @@
                             <thead class="thead-dark">
                             <tr>
                                 <th>#</th>
-                                <th>Código</th>
                                 <th>Material</th>
                                 <th class="text-center">Cantidad</th>
-                                <th class="text-right">Precio unitario</th>
+                                <th class="text-right">Precio Unit.</th>
                             </tr>
                             </thead>
                             <tbody id="detalle-tbody"></tbody>
                         </table>
                     </div>
                     <div id="detalle-vacio" class="text-center text-muted py-4" style="display:none;">
-                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
                         <p>Esta salida no tiene materiales registrados.</p>
                     </div>
                 </div>
@@ -210,47 +139,17 @@
             </div>
         </div>
     </div>
+
 @stop
 
 @section('js')
     <script src="{{ asset('js/toastr.min.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/axios.min.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/alertaPersonalizada.js') }}"></script>
-    <script src="{{ asset('js/select2.min.js') }}" type="text/javascript"></script>
 
     <script>
         $(function () {
-            const ruta = "{{ url('/admin/historial/salidas/tabla') }}";
 
-            // ── Select2 con badge de estado ───────────────────────
-            $('#filtro-proyecto').select2({
-                theme: 'bootstrap-5',
-                placeholder: '— Todos —',
-                allowClear: true,
-                language: { noResults: function () { return 'No encontrado'; } },
-                templateResult: function (data) {
-                    if (!data.id) return data.text;
-                    var cerrado = $(data.element).data('cerrado') == '1';  // 👈
-                    return $('<span class="d-flex align-items-center justify-content-between">')
-                        .append($('<span>').text(data.text))
-                        .append($('<span>')
-                            .addClass(cerrado ? 'badge badge-danger ml-2' : 'badge badge-success ml-2')
-                            .text(cerrado ? 'Cerrado' : 'Activo')
-                        );
-                },
-                templateSelection: function (data) {
-                    if (!data.id) return data.text;
-                    var cerrado = $(data.element).data('cerrado') == '1';  // 👈
-                    return $('<span>')
-                        .append($('<span>').text(data.text))
-                        .append($('<span>')
-                            .addClass(cerrado ? 'badge badge-danger ml-2' : 'badge badge-success ml-2')
-                            .text(cerrado ? 'Cerrado' : 'Activo')
-                        );
-                }
-            });
-
-            // ── DataTable ─────────────────────────────────────────
             function initDataTable() {
                 if ($.fn.DataTable.isDataTable('#tabla')) {
                     $('#tabla').DataTable().destroy();
@@ -264,6 +163,7 @@
                     autoWidth: false,
                     responsive: true,
                     pagingType: "full_numbers",
+                    order: [[0, 'desc']],
                     lengthMenu: [[50, 100, -1], [50, 100, "Todo"]],
                     language: {
                         sProcessing:   "Procesando...",
@@ -279,6 +179,10 @@
                             sNext: "Siguiente", sPrevious: "Anterior"
                         }
                     },
+                    columnDefs: [
+                        { targets: 0, orderData: 0 },
+                        { targets: -1, orderable: false, searchable: false }
+                    ],
                     dom:
                         "<'row align-items-center'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6 text-md-right'f>>" +
                         "tr" +
@@ -288,55 +192,30 @@
                 $('#tabla_filter input').addClass('form-control form-control-sm').css('display', 'inline-block');
             }
 
-            // ── Cargar tabla con filtros ──────────────────────────
             function cargarTabla() {
-                const proyecto   = $('#filtro-proyecto').val();
-                const fechaDesde = $('#filtro-fecha-desde').val();
-                const fechaHasta = $('#filtro-fecha-hasta').val();
-                const material   = $('#filtro-material').val().trim();
-
-                const params = new URLSearchParams();
-                if (proyecto)   params.append('proyecto',    proyecto);
-                if (fechaDesde) params.append('fecha_desde', fechaDesde);
-                if (fechaHasta) params.append('fecha_hasta', fechaHasta);
-                if (material)   params.append('material',    material);
-
-                const url = params.toString() ? ruta + '?' + params.toString() : ruta;
-
-                $('#tablaDatatable').load(url, function () {
+                const ruta = "{{ url('/admin/historial/salidas/tabla') }}";
+                openLoading();
+                $('#tablaDatatable').load(ruta, function () {
                     initDataTable();
                 });
             }
 
             window.recargar = function () { cargarTabla(); };
 
-            window.limpiarFiltros = function () {
-                $('#filtro-proyecto').val('').trigger('change');
-                $('#filtro-fecha-desde').val('');
-                $('#filtro-fecha-hasta').val('');
-                $('#filtro-material').val('');
-                cargarTabla();
-            };
-
             cargarTabla();
         });
-    </script>
 
-    <script>
-
-        // ── Editar cabecera ───────────────────────────────────────
+        // ── Editar cabecera ─────────────────────────────────────────
         function modalEditar(id) {
             openLoading();
             document.getElementById('formulario-editar').reset();
-
             axios.post(urlAdmin + '/admin/historial/salidas/informacion', { id: id })
                 .then((response) => {
                     closeLoading();
                     if (response.data.success === 1) {
                         const s = response.data.salida;
                         $('#id-editar').val(s.id);
-                        const soloFecha = s.fecha ? s.fecha.substring(0, 10) : '';
-                        $('#fecha-editar').val(soloFecha);
+                        $('#fecha-editar').val(s.fecha ? s.fecha.substring(0, 10) : '');
                         $('#descripcion-editar').val(s.descripcion ?? '');
                         $('#modalEditar').modal('show');
                     } else {
@@ -351,16 +230,16 @@
             const fecha       = $('#fecha-editar').val().trim();
             const descripcion = $('#descripcion-editar').val().trim();
 
-            if (fecha === '')             { toastr.error('La fecha es requerida'); return; }
+            if (!fecha)                   { toastr.error('La fecha es requerida'); return; }
             if (descripcion.length > 800) { toastr.error('Descripción máximo 800 caracteres'); return; }
 
             openLoading();
-            const formData = new FormData();
-            formData.append('id',          id);
-            formData.append('fecha',       fecha);
-            formData.append('descripcion', descripcion);
+            const fd = new FormData();
+            fd.append('id', id);
+            fd.append('fecha', fecha);
+            fd.append('descripcion', descripcion);
 
-            axios.post(urlAdmin + '/admin/historial/salidas/editar', formData)
+            axios.post(urlAdmin + '/admin/historial/salidas/editar', fd)
                 .then((response) => {
                     closeLoading();
                     if (response.data.success === 1) {
@@ -370,12 +249,11 @@
                     } else if (response.data.success === 2) {
                         Swal.fire({
                             title: 'Fecha inválida',
-                            html:
-                                'El material <b>' + response.data.nombre_material + '</b> ' +
+                            html: 'El material <b>' + response.data.nombre_material + '</b> ' +
                                 'tiene fecha de ingreso <b>' + response.data.fecha_ingreso + '</b>.<br><br>' +
                                 'La fecha de salida (<b>' + response.data.fecha_salida + '</b>) ' +
                                 'no puede ser anterior al ingreso.',
-                            icon: 'warning',
+                            type: 'warning',
                             confirmButtonColor: '#d33',
                             confirmButtonText: 'Entendido'
                         });
@@ -386,7 +264,7 @@
                 .catch(() => { closeLoading(); toastr.error('Error al actualizar'); });
         }
 
-        // ── Eliminar ──────────────────────────────────────────────
+        // ── Eliminar ────────────────────────────────────────────────
         function eliminar(id) {
             Swal.fire({
                 title: '¿Eliminar salida?',
@@ -415,21 +293,12 @@
             });
         }
 
-        // ── Detalle salida ────────────────────────────────────────
-        function verDetalle(id, proyecto, fecha, cerrado) {
-            $('#detalle-proyecto').text(proyecto);
+        // ── Ver detalle ─────────────────────────────────────────────
+        function verDetalle(id, fecha) {
             $('#detalle-fecha').text(fecha);
             $('#detalle-tbody').html('');
-            $('#detalle-contenido').hide();
-            $('#detalle-vacio').hide();
+            $('#detalle-contenido, #detalle-vacio').hide();
             $('#detalle-loading').show();
-
-            if (cerrado) {
-                $('#detalle-badge-cerrado').show();
-            } else {
-                $('#detalle-badge-cerrado').hide();
-            }
-
             $('#modalDetalle').modal('show');
 
             axios.post(urlAdmin + '/admin/historial/salidas/detalle', { id: id })
@@ -437,15 +306,13 @@
                     $('#detalle-loading').hide();
                     if (response.data.success === 1 && response.data.detalle.length > 0) {
                         let html = '';
-                        response.data.detalle.forEach((fila, index) => {
-                            html += `
-                                <tr>
-                                    <td>${index + 1}</td>
-                                    <td>${fila.codigo}</td>
-                                    <td>${fila.material}</td>
-                                    <td class="text-center">${fila.cantidad_salida}</td>
-                                    <td class="text-right">$${fila.precio}</td>
-                                </tr>`;
+                        response.data.detalle.forEach((fila, i) => {
+                            html += `<tr>
+                            <td>${i + 1}</td>
+                            <td>${fila.material}</td>
+                            <td class="text-center">${fila.cantidad_salida}</td>
+                            <td class="text-right">$${fila.precio}</td>
+                        </tr>`;
                         });
                         $('#detalle-tbody').html(html);
                         $('#detalle-contenido').show();
@@ -459,6 +326,5 @@
                     toastr.error('Error al cargar el detalle');
                 });
         }
-
     </script>
 @endsection

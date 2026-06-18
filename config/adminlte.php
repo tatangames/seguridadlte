@@ -430,6 +430,28 @@ return [
             ],
         ],
 
+        [
+            'text'    => 'Historial',
+            'icon'    => 'fas fa-pen-alt',
+            'can'     => 'sidebar.inventario',
+            'submenu' => [
+                [
+                    'text' => 'Historial Entradas',
+                    'icon' => 'far fa-circle',
+                    'route' => 'admin.historial.entradas.index',
+                ],
+
+                [
+                    'text' => 'Historial Salidas',
+                    'icon' => 'far fa-circle',
+                    'route' => 'admin.historial.salidas.index',
+                ],
+
+
+
+            ],
+        ],
+
 
         [
             'text'    => 'Reportes',

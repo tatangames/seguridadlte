@@ -10,4 +10,25 @@ class SalidasDetalle extends Model
     use HasFactory;
     protected $table = 'salidas_detalle';
     public $timestamps = false;
+
+    protected $fillable = [
+        'id_salida',
+        'id_entrada_detalle',
+        'cantidad_salida',
+        'tipo_regresa',
+        'reemplazo',
+        'recomendacion',
+        'mes_reemplazo',
+        'completado',
+    ];
+
+    public function salida()
+    {
+        return $this->belongsTo(Salidas::class, 'id_salida');
+    }
+
+    public function entradaDetalle()
+    {
+        return $this->belongsTo(EntradasDetalle::class, 'id_entrada_detalle');
+    }
 }

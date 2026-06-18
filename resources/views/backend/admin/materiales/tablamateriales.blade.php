@@ -49,27 +49,27 @@
         </td>
 
         {{-- Medida --}}
-        <td data-order="{{ $dato->unidadMedida }}" style="font-size:12px">
+        <td data-order="{{ $dato->unidadMedida }}">
             {{ $dato->unidadMedida }}
         </td>
 
         {{-- Marca --}}
-        <td data-order="{{ $dato->marca }}" style="font-size:12px">
+        <td data-order="{{ $dato->marca }}">
             {{ $dato->marca }}
         </td>
 
         {{-- Normativa --}}
-        <td data-order="{{ $dato->normativa }}" style="font-size:12px">
+        <td data-order="{{ $dato->normativa }}">
             {{ $dato->normativa }}
         </td>
 
         {{-- Talla --}}
-        <td data-order="{{ $dato->talla }}" style="font-size:12px">
+        <td data-order="{{ $dato->talla }}">
             {{ $dato->talla ?: '—' }}
         </td>
 
         {{-- Otros --}}
-        <td data-order="{{ $dato->otros }}" style="font-size:12px;color:#475569">
+        <td data-order="{{ $dato->otros }}" style="color:#475569">
             {{ $dato->otros ?: '—' }}
         </td>
 

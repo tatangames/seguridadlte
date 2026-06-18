@@ -11,8 +11,15 @@ class EntradasDetalle extends Model
     protected $table = 'entradas_detalle';
     public $timestamps = false;
 
+    protected $fillable = ['id_entradas','id_material', 'cantidad_inicial', 'precio'];
+
     public function entrada()
     {
         return $this->belongsTo(Entradas::class, 'id_entradas');
+    }
+
+    public function material()
+    {
+        return $this->belongsTo(Materiales::class, 'id_material');
     }
 }

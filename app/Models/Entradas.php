@@ -11,4 +11,17 @@ class Entradas extends Model
 
     protected $table = 'entradas';
     public $timestamps = false;
+
+    protected $fillable = ['id_proveedor','fecha', 'descripcion', 'lote'];
+
+
+    public function proveedor()
+    {
+        return $this->belongsTo(Proveedor::class, 'id_proveedor');
+    }
+
+    public function detalle()
+    {
+        return $this->hasMany(EntradasDetalle::class, 'id_entradas');
+    }
 }

@@ -15,6 +15,7 @@ use App\Http\Controllers\Sistema\MaterialesController;
 use App\Http\Controllers\Sistema\RegistrosController;
 use App\Http\Controllers\Sistema\UnidadEmpleadoController;
 use App\Http\Controllers\Sistema\EmpleadoController;
+use App\Http\Controllers\Sistema\HistorialSalidasController;
 
 
 Route::get('/', [LoginController::class,'vistaLoginForm'])->name('login.admin');
@@ -146,10 +147,6 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('/admin/entradas/guardar',  [RegistrosController::class,'guardarEntrada']);
     Route::post('/admin/buscar/materiales/porcodigo',  [RegistrosController::class,'buscarMaterialesPorCodigo']);
 
-
-
-
-
     // REGISTRO DE SALIDAS
     Route::get('/admin/salidas/vista', [RegistrosController::class,'indexRegistroSalida'])->name('admin.salidas.registro.index');
     Route::post('/admin/buscar/material/disponible',  [RegistrosController::class,'buscadorMaterialDisponible']);
@@ -159,9 +156,6 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/admin/salidas/pdfcompleto/{idsalida}', [RegistrosController::class,'generarPdfSalida']);
     Route::post('/admin/empleados/buscarunidad', [RegistrosController::class,'buscarUnidadConDistrito']);
     Route::post('/admin/empleados/buscarunidad-empleado', [RegistrosController::class,'buscarUnidadConDistritoEmpleado']);
-
-
-
 
     // UNIDAD EMPLEADO
     Route::get('/admin/unidadempleado/index', [UnidadEmpleadoController::class,'vistaUnidadEmpleado'])->name('admin.unidadempleado.index');
@@ -189,22 +183,6 @@ Route::middleware('auth:admin')->group(function () {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     // --- HISTORIAL / ENTRADAS ---
     Route::get('/admin/historial/entradas', [HistorialController::class,'indexHistorialEntradas'])->name('admin.historial.entradas.index');
     Route::get('/admin/historial/entradas/tabla',  [HistorialController::class,'tablaHistorialEntradas']);
@@ -214,41 +192,25 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('/admin/historial/entradas/detalle',        [HistorialController::class, 'detalleEntrada']);
     Route::post('/admin/historial/entradas/detalle/editar', [HistorialController::class, 'editarDetalleEntrada']);
     Route::post('/admin/historial/entradas/detalle/eliminar', [HistorialController::class, 'eliminarDetalleEntrada']);
-    Route::get('/admin/historial/entradas/extras/{id}', [HistorialController::class, 'vistaExtrasEntrada'])->name('admin.historial.entradas.extras');
+    Route::get('/admin/historial/nuevoingresoentradadetalle/index/{id}', [HistorialController::class, 'vistaExtrasEntrada'])->name('admin.historial.entradas.extras');
     Route::post('/admin/historial/entradas/extras/guardar', [HistorialController::class, 'guardarExtrasEntrada']);
 
+
+
     // --- HISTORIAL / SALIDAS ---
-    Route::get('/admin/historial/salidas', [HistorialController::class,'indexHistorialSalidas'])->name('admin.historial.salidas.index');
-    Route::get('/admin/historial/salidas/tabla',  [HistorialController::class,'tablaHistorialSalidas']);
-    Route::post('/admin/historial/salidas/informacion', [HistorialController::class, 'informacionSalida']);
-    Route::post('/admin/historial/salidas/editar',      [HistorialController::class, 'editarSalida']);
-    Route::post('/admin/historial/salidas/eliminar',    [HistorialController::class, 'eliminarSalida']);
-    Route::post('/admin/historial/salidas/detalle', [HistorialController::class, 'detalleSalida']);
-    Route::get('/admin/historial/salidas/extras/{id}',      [HistorialController::class, 'vistaExtrasSalida'])->name('admin.historial.salidas.extras');
-    Route::post('/admin/historial/salidas/extras/guardar',  [HistorialController::class, 'guardarExtrasSalida']);
-
-    // --- TRANSFERENCIA DE MATERIALES DE PROYECTOS CERRADOS ---
-    Route::get('/admin/transferencia/material/proyectoscerrados', [SalidasController::class,'indexTransferenciasDeProyectosCerrados'])->name('admin.transferencias.materiales.index');
-    Route::post('/admin/transferencia/material/xproyecto', [SalidasController::class,'retirarMaterialDeProyectosCerrados']);
-    // Ruta nueva para cargar materiales del proyecto cerrado
-    Route::post('/admin/transferencia/materiales/cerrado', [SalidasController::class, 'materialesDisponiblesCerrado']);
-    // Agregar esta ruta junto a las demás de reservas
-    Route::post('/admin/reservas/crear', [ReservasController::class, 'crearReserva']);
+    Route::get('/admin/historial/salidas', [HistorialSalidasController::class,'indexHistorialSalidas'])->name('admin.historial.salidas.index');
+    Route::get('/admin/historial/salidas/tabla',  [HistorialSalidasController::class,'tablaHistorialSalidas']);
+    Route::post('/admin/historial/salidas/informacion', [HistorialSalidasController::class, 'informacionSalida']);
+    Route::post('/admin/historial/salidas/editar',      [HistorialSalidasController::class, 'editarSalida']);
+    Route::post('/admin/historial/salidas/eliminar',    [HistorialSalidasController::class, 'eliminarSalida']);
+    Route::post('/admin/historial/salidas/detalle', [HistorialSalidasController::class, 'detalleSalida']);
+    Route::get('/admin/historial/salidas/extras/{id}',      [HistorialSalidasController::class, 'vistaExtrasSalida'])->name('admin.historial.salidas.extras');
+    Route::post('/admin/historial/salidas/extras/guardar',  [HistorialSalidasController::class, 'guardarExtrasSalida']);
 
 
-    // --- RESERVAS ---
-    Route::get('/admin/reservas/index', [ReservasController::class,'indexReservasPendientes'])->name('admin.reservas.index');
-    Route::post('/admin/reservas/listar', [ReservasController::class, 'listar']);
-    Route::post('/admin/reservas/despachar', [ReservasController::class, 'despachar']);
 
 
-    // --- HISTORIAL / TRANSFERENCIAS ---
-    Route::get('/admin/historial/transferencias', [HistorialController::class, 'indexHistorialTransferencias'])->name('admin.historial.transferencias.index');
-    Route::get('/admin/historial/transferencias/tabla', [HistorialController::class, 'tablaHistorialTransferencias']);
-    Route::post('/admin/historial/transferencias/informacion', [HistorialController::class, 'informacionTransferencia']);
-    Route::post('/admin/historial/transferencias/eliminar', [HistorialController::class, 'eliminarTransferencia']);
-    Route::post('/admin/historial/transferencias/detalle', [HistorialController::class, 'detalleTransferencia']);
-    Route::get('/admin/historial/transferencias/acta/pdf/{id}', [HistorialController::class, 'actaDesdeHistorial']);
+
 
 
     // --- REPORTES DE DIFERENTES FORMULARIOS ---

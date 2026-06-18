@@ -28,7 +28,6 @@
             </a>
         </div>
     </li>
-
     <li class="nav-item">
         <form action="{{ route('admin.logout') }}" method="POST" class="d-inline">
             @csrf
@@ -41,55 +40,13 @@
 @endsection
 
 @section('content')
-    <div id="divcontenedor">
 
-        {{-- ══ FILTROS ══ --}}
-        <section class="content" style="margin-bottom:0">
-            <div class="container-fluid">
-                <div class="card card-blue">
-                    <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-filter mr-1"></i> Filtros</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="row align-items-end">
-                            <div class="col-md-4">
-                                <label class="font-weight-bold">Proyecto</label>
-                                <select class="form-control" id="filtro-proyecto">
-                                    <option value="">— Todos —</option>
-                                    @foreach($arrayProyectos as $p)
-                                        <option value="{{ $p->id }}"
-                                                data-cerrado="{{ $p->transferido ? '1' : '0' }}">
-                                            {{ $p->nombre }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="font-weight-bold">Fecha desde</label>
-                                <input type="date" class="form-control" id="filtro-fecha-desde">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="font-weight-bold">Fecha hasta</label>
-                                <input type="date" class="form-control" id="filtro-fecha-hasta">
-                            </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-primary btn-block mb-1" onclick="recargar()">
-                                    <i class="fas fa-search mr-1"></i> Filtrar
-                                </button>
-                                <button class="btn btn-secondary btn-block" onclick="limpiarFiltros()">
-                                    <i class="fas fa-times mr-1"></i> Limpiar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+    <div id="divcontenedor">
 
         {{-- ══ TABLA ══ --}}
         <section class="content">
             <div class="container-fluid">
-                <div class="card card-blue">
+                <div class="card card-primary">
                     <div class="card-header">
                         <h3 class="card-title">Listado de Entradas</h3>
                     </div>
@@ -125,21 +82,25 @@
                             <input type="date" id="fecha-editar" class="form-control">
                         </div>
                         <div class="form-group">
-                            <label>Factura</label>
-                            <input type="text" id="factura-editar" class="form-control"
-                                   placeholder="Número de factura (opcional)" maxlength="100">
+                            <label>Lote / Factura</label>
+                            <input type="text" id="lote-editar" class="form-control"
+                                   placeholder="Ej: FAC-0001 (opcional)" maxlength="100">
                         </div>
                         <div class="form-group">
                             <label>Descripción</label>
                             <textarea id="descripcion-editar" class="form-control"
                                       rows="3" maxlength="800" placeholder="Descripción opcional"></textarea>
                         </div>
+                        <div class="form-group">
+                            <label>Proveedor</label>
+                            <select id="select-proveedor-editar" class="form-control" style="width:100%"></select>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-warning" onclick="editar()">
-                        <i class="fas fa-save mr-1"></i>Guardar cambios
+                    <button type="button" class="btn btn-warning" onclick="guardarEdicion()">
+                        <i class="fas fa-save mr-1"></i>Actualizar
                     </button>
                 </div>
             </div>
@@ -153,12 +114,9 @@
                 <div class="modal-header bg-info">
                     <h5 class="modal-title text-white">
                         <i class="fas fa-list mr-2"></i>
-                        Detalle de Entrada —
-                        <span id="detalle-proyecto"></span>
+                        Detalle —
+                        <span id="detalle-lote"></span>
                         <small class="ml-2" id="detalle-fecha"></small>
-                        <span id="detalle-badge-cerrado" class="badge badge-danger ml-2" style="display:none;">
-                            Proyecto Cerrado
-                        </span>
                     </h5>
                     <button type="button" class="close text-white" data-dismiss="modal">
                         <span>&times;</span>
@@ -173,19 +131,17 @@
                             <thead class="thead-dark">
                             <tr>
                                 <th>#</th>
-                                <th>Detalle</th>
-                                <th>Marca</th>
                                 <th>Material</th>
                                 <th class="text-center">Cantidad</th>
-                                <th class="text-right">Precio unitario</th>
-                                <th id="detalle-col-accion" class="text-center">Acciones</th>
+                                <th class="text-right">Precio Unit.</th>
+                                <th class="text-center">Acciones</th>
                             </tr>
                             </thead>
                             <tbody id="detalle-tbody"></tbody>
                         </table>
                     </div>
                     <div id="detalle-vacio" class="text-center text-muted py-4" style="display:none;">
-                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
                         <p>Esta entrada no tiene materiales registrados.</p>
                     </div>
                 </div>
@@ -198,7 +154,7 @@
 
     {{-- Modal Editar Detalle --}}
     <div class="modal fade" id="modalEditarDetalle" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-dialog modal-sm" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-warning">
                     <h5 class="modal-title text-white">
@@ -216,9 +172,9 @@
                             <input type="text" id="detalle-material-editar" class="form-control" disabled>
                         </div>
                         <div class="form-group">
-                            <label>Detalle (Opcional)</label>
-                            <input type="text" id="detalle-codigo-editar" class="form-control"
-                                   maxlength="100" placeholder="Código (opcional)">
+                            <label>Cantidad <span class="text-danger">*</span></label>
+                            <input type="number" id="detalle-cantidad-editar" class="form-control"
+                                   min="1" placeholder="0">
                         </div>
                         <div class="form-group">
                             <label>Precio unitario <span class="text-danger">*</span></label>
@@ -236,6 +192,7 @@
             </div>
         </div>
     </div>
+
 @stop
 
 @section('js')
@@ -246,37 +203,15 @@
 
     <script>
         $(function () {
-            const ruta = "{{ url('/admin/historial/entradas/tabla') }}";
 
-            // ── Select2 con badge de estado ───────────────────────
-            $('#filtro-proyecto').select2({
+            // ── Select2 proveedor en modal editar ───────────────────
+            $('#select-proveedor-editar').select2({
                 theme: 'bootstrap-5',
-                placeholder: '— Todos —',
-                allowClear: true,
+                dropdownParent: $('#modalEditar'),
                 language: { noResults: function () { return 'No encontrado'; } },
-                templateResult: function (data) {
-                    if (!data.id) return data.text;
-                    var cerrado = $(data.element).data('cerrado') == '1';
-                    return $('<span class="d-flex align-items-center justify-content-between">')
-                        .append($('<span>').text(data.text))
-                        .append($('<span>')
-                            .addClass(cerrado ? 'badge badge-danger ml-2' : 'badge badge-success ml-2')
-                            .text(cerrado ? 'Cerrado' : 'Activo')
-                        );
-                },
-                templateSelection: function (data) {
-                    if (!data.id) return data.text;
-                    var cerrado = $(data.element).data('cerrado') == '1';
-                    return $('<span>')
-                        .append($('<span>').text(data.text))
-                        .append($('<span>')
-                            .addClass(cerrado ? 'badge badge-danger ml-2' : 'badge badge-success ml-2')
-                            .text(cerrado ? 'Cerrado' : 'Activo')
-                        );
-                }
             });
 
-            // ── DataTable ─────────────────────────────────────────
+            // ── DataTable ───────────────────────────────────────────
             function initDataTable() {
                 if ($.fn.DataTable.isDataTable('#tabla')) {
                     $('#tabla').DataTable().destroy();
@@ -290,6 +225,7 @@
                     autoWidth: false,
                     responsive: true,
                     pagingType: "full_numbers",
+                    order: [[0, 'desc']],
                     lengthMenu: [[50, 100, -1], [50, 100, "Todo"]],
                     language: {
                         sProcessing:   "Procesando...",
@@ -305,6 +241,10 @@
                             sNext: "Siguiente", sPrevious: "Anterior"
                         }
                     },
+                    columnDefs: [
+                        { targets: 0, orderData: 0 },
+                        { targets: -1, orderable: false, searchable: false }
+                    ],
                     dom:
                         "<'row align-items-center'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6 text-md-right'f>>" +
                         "tr" +
@@ -314,73 +254,51 @@
                 $('#tabla_filter input').addClass('form-control form-control-sm').css('display', 'inline-block');
             }
 
-            // ── Cargar tabla con filtros ──────────────────────────
             function cargarTabla() {
-                const proyecto   = $('#filtro-proyecto').val();
-                const fechaDesde = $('#filtro-fecha-desde').val();
-                const fechaHasta = $('#filtro-fecha-hasta').val();
-
-                const params = new URLSearchParams();
-                if (proyecto)   params.append('proyecto',    proyecto);
-                if (fechaDesde) params.append('fecha_desde', fechaDesde);
-                if (fechaHasta) params.append('fecha_hasta', fechaHasta);
-
-                const url = params.toString() ? ruta + '?' + params.toString() : ruta;
-
-                $('#tablaDatatable').load(url, function () {
+                const ruta = "{{ url('/admin/historial/entradas/tabla') }}";
+                openLoading();
+                $('#tablaDatatable').load(ruta, function () {
                     initDataTable();
                 });
             }
 
             window.recargar = function () { cargarTabla(); };
 
-            window.limpiarFiltros = function () {
-                $('#filtro-proyecto').val('').trigger('change');
-                $('#filtro-fecha-desde').val('');
-                $('#filtro-fecha-hasta').val('');
-                cargarTabla();
-            };
+            // Delegación botones detalle
+            $(document).on('click', '.btn-editar-detalle', function () {
+                const b = $(this);
+                modalEditarDetalle(b.data('id'), b.data('material'), b.data('cantidad'), b.data('precio'));
+            });
+            $(document).on('click', '.btn-eliminar-detalle', function () {
+                const b = $(this);
+                eliminarDetalle(b.data('id'), b.data('material'));
+            });
 
             cargarTabla();
-
-            // ── Delegación de evento para botón editar detalle ────
-            $(document).on('click', '.btn-editar-detalle', function () {
-                const btn = $(this);
-                modalEditarDetalle(
-                    btn.data('id'),
-                    btn.data('material'),
-                    btn.data('codigo'),
-                    btn.data('precio')
-                );
-            });
-
-            // ── Delegación de evento para botón eliminar detalle ──
-            $(document).on('click', '.btn-eliminar-detalle', function () {
-                const btn = $(this);
-                eliminarDetalle(
-                    btn.data('id'),
-                    btn.data('material')
-                );
-            });
         });
-    </script>
 
-    <script>
-
-        // ── Editar cabecera ───────────────────────────────────────
+        // ── Editar cabecera ─────────────────────────────────────────
         function modalEditar(id) {
             openLoading();
             document.getElementById('formulario-editar').reset();
-
             axios.post(urlAdmin + '/admin/historial/entradas/informacion', { id: id })
                 .then((response) => {
                     closeLoading();
                     if (response.data.success === 1) {
-                        const e = response.data.entrada;
+                        const e = response.data.info;
                         $('#id-editar').val(e.id);
                         $('#fecha-editar').val(e.fecha);
-                        $('#factura-editar').val(e.factura ?? '');
+                        $('#lote-editar').val(e.lote ?? '');
                         $('#descripcion-editar').val(e.descripcion ?? '');
+
+                        $('#select-proveedor-editar').empty();
+                        $.each(response.data.arrayProveedor, function (key, val) {
+                            var selected = (e.id_proveedor == val.id) ? ' selected="selected"' : '';
+                            $('#select-proveedor-editar').append(
+                                '<option value="' + val.id + '"' + selected + '>' + val.nombre + '</option>'
+                            );
+                        });
+                        $('#select-proveedor-editar').trigger('change');
                         $('#modalEditar').modal('show');
                     } else {
                         toastr.error('No se pudo cargar la información');
@@ -389,42 +307,40 @@
                 .catch(() => { closeLoading(); toastr.error('Error al obtener información'); });
         }
 
-        function editar() {
+        function guardarEdicion() {
             const id          = $('#id-editar').val();
             const fecha       = $('#fecha-editar').val().trim();
-            const factura     = $('#factura-editar').val().trim();
+            const lote        = $('#lote-editar').val().trim();
             const descripcion = $('#descripcion-editar').val().trim();
+            const proveedor   = $('#select-proveedor-editar').val();
 
-            if (fecha === '')             { toastr.error('La fecha es requerida'); return; }
-            if (factura.length > 100)     { toastr.error('Factura máximo 100 caracteres'); return; }
+            if (!fecha)                   { toastr.error('La fecha es requerida'); return; }
+            if (lote.length > 100)        { toastr.error('Lote máximo 100 caracteres'); return; }
             if (descripcion.length > 800) { toastr.error('Descripción máximo 800 caracteres'); return; }
 
             openLoading();
-            const formData = new FormData();
-            formData.append('id',          id);
-            formData.append('fecha',       fecha);
-            formData.append('factura',     factura);
-            formData.append('descripcion', descripcion);
+            const fd = new FormData();
+            fd.append('id', id); fd.append('fecha', fecha);
+            fd.append('lote', lote); fd.append('descripcion', descripcion);
+            fd.append('proveedor', proveedor);
 
-            axios.post(urlAdmin + '/admin/historial/entradas/editar', formData)
+            axios.post(urlAdmin + '/admin/historial/entradas/editar', fd)
                 .then((response) => {
                     closeLoading();
                     if (response.data.success === 1) {
                         toastr.success('Entrada actualizada correctamente');
                         $('#modalEditar').modal('hide');
                         recargar();
-                    } else {
-                        toastr.error('Error al actualizar');
-                    }
+                    } else { toastr.error('Error al actualizar'); }
                 })
                 .catch(() => { closeLoading(); toastr.error('Error al actualizar'); });
         }
 
-        // ── Eliminar entrada completa ─────────────────────────────
+        // ── Eliminar entrada ────────────────────────────────────────
         function eliminar(id) {
             Swal.fire({
                 title: '¿Eliminar entrada?',
-                text: 'Se eliminarán también todos los detalles relacionados. Esta acción no se puede deshacer.',
+                text: 'Se eliminarán también todos los materiales relacionados. Esta acción no se puede deshacer.',
                 type: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
@@ -437,47 +353,11 @@
                     axios.post(urlAdmin + '/admin/historial/entradas/eliminar', { id: id })
                         .then((response) => {
                             closeLoading();
-
                             switch (response.data.success) {
-
-                                case 1:
-                                    toastr.success('Entrada eliminada correctamente');
-                                    recargar();
-                                    break;
-
-                                case 2:
-                                    Swal.fire({
-                                        title: 'No se puede eliminar',
-                                        text:  response.data.msg ||
-                                            'Esta entrada tiene reservas ya despachadas y no puede eliminarse.',
-                                        icon:  'warning',
-                                        confirmButtonColor: '#d33',
-                                        confirmButtonText:  'Entendido'
-                                    });
-                                    break;
-
-                                case 3:
-                                    Swal.fire({
-                                        title: 'No se puede eliminar aquí',
-                                        text:  response.data.msg ||
-                                            'Esta entrada proviene de una transferencia. Elimínela desde el Historial de Transferencias.',
-                                        icon:  'info',
-                                        confirmButtonColor: '#2156af',
-                                        confirmButtonText:  'Entendido'
-                                    });
-                                    break;
-
-                                case 0:
-                                    toastr.error('La entrada no existe o ya fue eliminada');
-                                    recargar();
-                                    break;
-
-                                case 99:
-                                    toastr.error('Ocurrió un error al eliminar. Intente nuevamente.');
-                                    break;
-
-                                default:
-                                    toastr.error('Error al eliminar');
+                                case 1:  toastr.success('Entrada eliminada correctamente'); recargar(); break;
+                                case 0:  toastr.error('La entrada no existe o ya fue eliminada'); recargar(); break;
+                                case 99: toastr.error(response.data.msg || 'Ocurrió un error al eliminar'); break;
+                                default: toastr.error('Error al eliminar');
                             }
                         })
                         .catch(() => { closeLoading(); toastr.error('Error al eliminar'); });
@@ -485,24 +365,14 @@
             });
         }
 
-        // ── Detalle entrada ───────────────────────────────────────
-        function verDetalle(id, proyecto, fecha, cerrado) {
+        // ── Ver detalle ─────────────────────────────────────────────
+        function verDetalle(id, lote, fecha) {
             $('#detalle-id-editar').data('entrada-id', id);
-            $('#detalle-proyecto').text(proyecto);
+            $('#detalle-lote').text(lote || '—');
             $('#detalle-fecha').text(fecha);
             $('#detalle-tbody').html('');
-            $('#detalle-contenido').hide();
-            $('#detalle-vacio').hide();
+            $('#detalle-contenido, #detalle-vacio').hide();
             $('#detalle-loading').show();
-
-            if (cerrado) {
-                $('#detalle-badge-cerrado').show();
-                $('#detalle-col-accion').hide();
-            } else {
-                $('#detalle-badge-cerrado').hide();
-                $('#detalle-col-accion').show();
-            }
-
             $('#modalDetalle').modal('show');
 
             axios.post(urlAdmin + '/admin/historial/entradas/detalle', { id: id })
@@ -510,39 +380,29 @@
                     $('#detalle-loading').hide();
                     if (response.data.success === 1 && response.data.detalle.length > 0) {
                         let html = '';
-                        response.data.detalle.forEach((fila, index) => {
-                            // ✅ Botones con data-* para evitar problemas con caracteres especiales
-                            let botones = '';
-                            if (!cerrado) {
-                                botones = `
-                                    <button type="button"
-                                            class="btn btn-warning btn-xs btn-editar-detalle mr-1"
-                                            title="Editar"
-                                            data-id="${fila.id}"
-                                            data-material="${fila.material}"
-                                            data-codigo="${fila.codigo ?? ''}"
-                                            data-precio="${fila.precio_raw}">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button type="button"
-                                            class="btn btn-danger btn-xs btn-eliminar-detalle"
-                                            title="Eliminar"
-                                            data-id="${fila.id}"
-                                            data-material="${fila.material}">
-                                        <i class="fas fa-trash"></i>
-                                    </button>`;
-                            }
-
-                            html += `
-                                <tr>
-                                    <td>${index + 1}</td>
-                                    <td>${fila.codigo ?? ''}</td>
-                                    <td>${fila.marca ?? ''}</td>
-                                    <td>${fila.material}</td>
-                                    <td class="text-center">${fila.cantidad_inicial}</td>
-                                    <td class="text-right">$${fila.precio}</td>
-                                    <td class="text-center text-nowrap">${botones}</td>
-                                </tr>`;
+                        response.data.detalle.forEach((fila, i) => {
+                            const botones = `
+                            <button type="button"
+                                    class="btn btn-warning btn-xs btn-editar-detalle mr-1"
+                                    data-id="${fila.id}"
+                                    data-material="${fila.material}"
+                                    data-cantidad="${fila.cantidad_inicial}"
+                                    data-precio="${fila.precio_raw}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button"
+                                    class="btn btn-danger btn-xs btn-eliminar-detalle"
+                                    data-id="${fila.id}"
+                                    data-material="${fila.material}">
+                                <i class="fas fa-trash"></i>
+                            </button>`;
+                            html += `<tr>
+                            <td>${i+1}</td>
+                            <td>${fila.material}</td>
+                            <td class="text-center">${fila.cantidad_inicial}</td>
+                            <td class="text-right">$${fila.precio}</td>
+                            <td class="text-center text-nowrap">${botones}</td>
+                        </tr>`;
                         });
                         $('#detalle-tbody').html(html);
                         $('#detalle-contenido').show();
@@ -557,59 +417,48 @@
                 });
         }
 
-        // ── Editar fila de detalle ────────────────────────────────
-        function modalEditarDetalle(id, material, codigo, precio) {
+        // ── Editar fila detalle ─────────────────────────────────────
+        function modalEditarDetalle(id, material, cantidad, precio) {
             document.getElementById('formulario-editar-detalle').reset();
             $('#detalle-id-editar').val(id);
             $('#detalle-material-editar').val(material);
-            $('#detalle-codigo-editar').val(codigo !== '' ? codigo : '');
+            $('#detalle-cantidad-editar').val(cantidad);
             $('#detalle-precio-editar').val(precio);
             $('#modalEditarDetalle').modal('show');
         }
 
         function editarDetalle() {
-            const id     = $('#detalle-id-editar').val();
-            const codigo = $('#detalle-codigo-editar').val().trim();
-            const precio = $('#detalle-precio-editar').val().trim();
+            const id       = $('#detalle-id-editar').val();
+            const cantidad = $('#detalle-cantidad-editar').val().trim();
+            const precio   = $('#detalle-precio-editar').val().trim();
 
-            if (precio === '' || isNaN(precio) || parseFloat(precio) < 0) {
-                toastr.error('Precio inválido'); return;
-            }
-            if (codigo.length > 100) {
-                toastr.error('Código máximo 100 caracteres'); return;
-            }
+            if (!cantidad || isNaN(cantidad) || parseInt(cantidad) < 1) { toastr.error('Cantidad inválida'); return; }
+            if (precio === '' || isNaN(precio) || parseFloat(precio) < 0) { toastr.error('Precio inválido'); return; }
 
             openLoading();
-            const formData = new FormData();
-            formData.append('id',     id);
-            formData.append('codigo', codigo);
-            formData.append('precio', precio);
+            const fd = new FormData();
+            fd.append('id', id); fd.append('cantidad', cantidad); fd.append('precio', precio);
 
-            axios.post(urlAdmin + '/admin/historial/entradas/detalle/editar', formData)
+            axios.post(urlAdmin + '/admin/historial/entradas/detalle/editar', fd)
                 .then((response) => {
                     closeLoading();
                     if (response.data.success === 1) {
                         toastr.success('Actualizado correctamente');
                         $('#modalEditarDetalle').modal('hide');
-
                         const entradaId = $('#detalle-id-editar').data('entrada-id');
-                        const proyecto  = $('#detalle-proyecto').text();
+                        const lote      = $('#detalle-lote').text();
                         const fecha     = $('#detalle-fecha').text();
-                        const cerrado   = $('#detalle-badge-cerrado').is(':visible') ? 1 : 0;
-                        verDetalle(entradaId, proyecto, fecha, cerrado);
-                    } else {
-                        toastr.error('Error al actualizar');
-                    }
+                        verDetalle(entradaId, lote, fecha);
+                    } else { toastr.error('Error al actualizar'); }
                 })
                 .catch(() => { closeLoading(); toastr.error('Error al actualizar'); });
         }
 
-        // ── Eliminar fila de detalle ──────────────────────────────
+        // ── Eliminar fila detalle ───────────────────────────────────
         function eliminarDetalle(id, material) {
             Swal.fire({
                 title: '¿Eliminar material?',
-                html: `Se eliminará el material: <b>${material}</b><br><br>
-               <small class="text-muted">Si es el último material de esta entrada, la entrada completa también será eliminada.</small>`,
+                html: 'Se eliminará: <b>' + material + '</b><br><br><small class="text-muted">Si es el último material, la entrada también se eliminará.</small>',
                 type: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
@@ -622,7 +471,6 @@
                     axios.post(urlAdmin + '/admin/historial/entradas/detalle/eliminar', { id: id })
                         .then((response) => {
                             closeLoading();
-
                             switch (response.data.success) {
                                 case 1:
                                     if (response.data.entrada_borrada) {
@@ -632,81 +480,28 @@
                                     } else {
                                         toastr.success('Material eliminado correctamente');
                                         const entradaId = $('#detalle-id-editar').data('entrada-id');
-                                        const proyecto  = $('#detalle-proyecto').text();
+                                        const lote      = $('#detalle-lote').text();
                                         const fecha     = $('#detalle-fecha').text();
-                                        const cerrado   = $('#detalle-badge-cerrado').is(':visible') ? 1 : 0;
-                                        verDetalle(entradaId, proyecto, fecha, cerrado);
+                                        verDetalle(entradaId, lote, fecha);
                                         recargar();
                                     }
                                     break;
-
-                                case 2:
-                                    Swal.fire({
-                                        title: 'No se puede eliminar',
-                                        text:  response.data.msg || 'El proyecto está cerrado.',
-                                        icon:  'warning',
-                                        confirmButtonColor: '#d33',
-                                        confirmButtonText:  'Entendido'
-                                    });
-                                    break;
-
-                                case 3:
-                                    Swal.fire({
-                                        title: 'No se puede eliminar aquí',
-                                        text:  response.data.msg ||
-                                            'Este material proviene de una transferencia. Elimínelo desde el Historial de Transferencias.',
-                                        icon:  'info',
-                                        confirmButtonColor: '#2156af',
-                                        confirmButtonText:  'Entendido'
-                                    });
-                                    break;
-
                                 case 4:
                                     Swal.fire({
                                         title: 'No se puede eliminar',
-                                        text:  response.data.msg || 'Este material ya tiene salidas registradas.',
-                                        icon:  'warning',
-                                        confirmButtonColor: '#d33',
-                                        confirmButtonText:  'Entendido'
+                                        text: response.data.msg || 'Este material ya tiene salidas registradas.',
+                                        type: 'warning',
+                                        confirmButtonText: 'Entendido'
                                     });
                                     break;
-
-                                case 5:
-                                    Swal.fire({
-                                        title: 'No se puede eliminar',
-                                        text:  response.data.msg || 'Este material tiene reservas asociadas.',
-                                        icon:  'warning',
-                                        confirmButtonColor: '#d33',
-                                        confirmButtonText:  'Entendido'
-                                    });
-                                    break;
-
-                                case 6:
-                                    Swal.fire({
-                                        title: 'No se puede eliminar',
-                                        text:  response.data.msg || 'Este material está incluido en una transferencia.',
-                                        icon:  'warning',
-                                        confirmButtonColor: '#d33',
-                                        confirmButtonText:  'Entendido'
-                                    });
-                                    break;
-
-                                case 0:
-                                    toastr.error('El material no existe o ya fue eliminado');
-                                    break;
-
-                                case 99:
-                                    toastr.error(response.data.msg || 'Ocurrió un error al eliminar.');
-                                    break;
-
-                                default:
-                                    toastr.error('Error al eliminar');
+                                case 0:  toastr.error('El material no existe o ya fue eliminado'); break;
+                                case 99: toastr.error(response.data.msg || 'Ocurrió un error al eliminar'); break;
+                                default: toastr.error('Error al eliminar');
                             }
                         })
                         .catch(() => { closeLoading(); toastr.error('Error al eliminar'); });
                 }
             });
         }
-
     </script>
 @endsection
