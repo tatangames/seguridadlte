@@ -49,9 +49,16 @@ class HistorialSalidasController extends Controller
         return response()->json([
             'success' => 1,
             'salida'  => [
-                'id'          => $salida->id,
-                'fecha'       => $salida->fecha,
-                'descripcion' => $salida->descripcion,
+                'id'             => $salida->id,
+                'fecha'          => $salida->fecha,
+                'descripcion'    => $salida->descripcion,
+                'area'           => $salida->area,
+                'cargo'          => $salida->cargo,
+                'colaborador'    => $salida->colaborador,
+                'jefe_inmediato' => $salida->jefe_inmediato,
+                'jefe_firma'     => $salida->jefe_firma,
+                'cargo_firma'    => $salida->cargo_firma,
+                'material_linea' => $salida->material_linea,
             ]
         ]);
     }
@@ -84,8 +91,15 @@ class HistorialSalidasController extends Controller
             ]);
         }
 
-        $salida->fecha       = $request->fecha;
-        $salida->descripcion = $request->descripcion ?: null;
+        $salida->fecha          = $request->fecha;
+        $salida->descripcion    = $request->descripcion    ?: null;
+        $salida->area           = $request->area           ?: null;
+        $salida->cargo          = $request->cargo          ?: null;
+        $salida->colaborador    = $request->colaborador    ?: null;
+        $salida->jefe_inmediato = $request->jefe_inmediato ?: null;
+        $salida->jefe_firma     = $request->jefe_firma     ?: null;
+        $salida->cargo_firma    = $request->cargo_firma    ?: null;
+        $salida->material_linea = $request->material_linea ?: null;
         $salida->save();
 
         return response()->json(['success' => 1]);
@@ -119,6 +133,7 @@ class HistorialSalidasController extends Controller
             ->get()
             ->map(function ($item) {
                 return [
+                    'id_detalle'      => $item->id,
                     'material'        => $item->entradaDetalle->material->nombre ?? '—',
                     'cantidad_salida' => $item->cantidad_salida,
                     'precio'          => number_format($item->entradaDetalle->precio ?? 0, 4),
@@ -207,6 +222,35 @@ class HistorialSalidasController extends Controller
             DB::rollback();
             return response()->json(['success' => 99]);
         }
+    }
+
+
+    /**
+     * Eliminar un ítem del detalle de salida.
+     * Si era el último ítem, elimina también la cabecera de la salida.
+     */
+    public function eliminarItemDetalleSalida(Request $request)
+    {
+        $detalle = SalidasDetalle::find($request->id_detalle);
+
+        if (!$detalle) {
+            return response()->json(['success' => 0]);
+        }
+
+        $idSalida = $detalle->id_salida;
+
+        // Eliminar el ítem
+        $detalle->delete();
+
+        // Verificar si quedan más ítems en esta salida
+        $itemsRestantes = SalidasDetalle::where('id_salida', $idSalida)->count();
+
+        if ($itemsRestantes === 0) {
+            // Era el último → eliminar también la cabecera
+            Salidas::where('id', $idSalida)->delete();
+        }
+
+        return response()->json(['success' => 1]);
     }
 
 

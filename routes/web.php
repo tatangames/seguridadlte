@@ -206,7 +206,7 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('/admin/historial/salidas/detalle', [HistorialSalidasController::class, 'detalleSalida']);
     Route::get('/admin/historial/salidas/extras/{id}',      [HistorialSalidasController::class, 'vistaExtrasSalida'])->name('admin.historial.salidas.extras');
     Route::post('/admin/historial/salidas/extras/guardar',  [HistorialSalidasController::class, 'guardarExtrasSalida']);
-
+    Route::post('/admin/historial/salidas/detalle/eliminar', [HistorialSalidasController::class, 'eliminarItemDetalleSalida']);
 
 
 
