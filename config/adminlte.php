@@ -328,16 +328,19 @@ return [
             'text' => 'Materiales',
             'icon' => 'far fa-circle',
             'route' => 'admin.materiales.index',
+            'can'     => 'sidebar.inventario',
         ],
         [
             'text' => 'Entradas',
             'icon' => 'far fa-circle',
             'route' => 'admin.entrada.registro.index',
+            'can'     => 'sidebar.inventario',
         ],
         [
             'text' => 'Salidas',
             'icon' => 'far fa-circle',
             'route' => 'admin.salidas.registro.index',
+            'can'     => 'sidebar.inventario',
         ],
 
         [
@@ -450,6 +453,7 @@ return [
             'text' => 'Reportes',
             'icon' => 'far fa-circle',
             'route' => 'admin.reportes.index',
+            'can'     => 'sidebar.inventario',
         ],
 
 
