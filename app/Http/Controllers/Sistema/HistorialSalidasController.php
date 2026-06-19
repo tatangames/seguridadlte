@@ -30,13 +30,8 @@ class HistorialSalidasController extends Controller
 
     public function tablaHistorialSalidas(Request $request)
     {
-        $tieneFiltro = $request->filled('id_distrito')
-            || $request->filled('id_unidad')
-            || $request->filled('id_empleado')
-            || $request->filled('fecha_desde')
-            || $request->filled('fecha_hasta');
-
-        if (!$tieneFiltro) {
+        // Solo bloquear si no vino del botón Buscar
+        if (!$request->filled('buscar_todos')) {
             $arraySalidas = collect();
             return view('backend.admin.historial.salidas.tablahistorialsalidas',
                 compact('arraySalidas'));

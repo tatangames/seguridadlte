@@ -516,16 +516,11 @@
                 id_unidad:    $('#select-unidad-filtro').val()    || '',
                 id_empleado:  $('#select-empleado-filtro').val()  || '',
                 fecha_desde:  $('#fecha-desde-filtro').val()      || '',
-                fecha_hasta:  $('#fecha-hasta-filtro').val()      || ''
+                fecha_hasta:  $('#fecha-hasta-filtro').val()      || '',
+                buscar_todos: '1'   // ← siempre activo al presionar Buscar
             };
 
-            const hayFiltro = Object.values(filtros).some(v => v !== '');
-
-            if (!hayFiltro) {
-                toastr.warning('Selecciona al menos un filtro antes de buscar');
-                return;
-            }
-
+            // Eliminamos la validación que bloqueaba "Todos"
             cargarTablaConFiltros(filtros);
         }
 
