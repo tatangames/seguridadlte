@@ -547,7 +547,8 @@
                         }
                     } else {
                         closeLoading();
-                        toastr.error('No se pudo cargar la información');
+                        toastr.error('No se pudo cargar la información.');
+
                     }
                 })
                 .catch(function () { closeLoading(); toastr.error('Error al obtener información'); });
