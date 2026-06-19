@@ -37,8 +37,6 @@ class ReportesController extends Controller
 
     public function buscarUnidadConDistritoEmpleadoReporte(Request $request)
     {
-        \Log::info('id recibido:', $request->all());
-
         $validar = Validator::make($request->all(), ['id' => 'required']);
         if ($validar->fails()) return ['success' => 0];
 
@@ -315,7 +313,7 @@ class ReportesController extends Controller
         $mpdf = new \Mpdf\Mpdf([
             'tempDir'      => sys_get_temp_dir(),
             'format'       => 'LETTER',
-            'orientation'  => 'L',
+            'orientation'  => 'P',
             'default_font' => 'arial',
         ]);
 
@@ -325,12 +323,10 @@ class ReportesController extends Controller
         $logoalcaldia = public_path('images/logo.png');
         $fechaFormat  = \Carbon\Carbon::now('America/El_Salvador')->format('d-m-Y');
 
-        // ── Existencias (cantidades) ───────────────────────────────────
+        // ── Existencias (cantidades) + Obj. Específico ──────────────────
         $existencias = DB::table('materiales as m')
             ->leftJoin('unidadmedida as um', 'um.id', '=', 'm.id_medida')
-            ->leftJoin('marca as ma', 'ma.id', '=', 'm.id_marca')
-            ->leftJoin('color as c', 'c.id', '=', 'm.id_color')
-            ->leftJoin('talla as t', 't.id', '=', 'm.id_talla')
+            ->leftJoin('objeto_especifico as oe', 'oe.id', '=', 'm.id_objespecifico')
             ->leftJoinSub(
                 DB::table('entradas_detalle')
                     ->select('id_material', DB::raw('SUM(cantidad_inicial) as total_ingresado'))
@@ -349,23 +345,23 @@ class ReportesController extends Controller
                 'm.codigo',
                 'm.nombre as material',
                 'um.nombre as unidad',
-                'ma.nombre as marca',
-                'c.nombre as color',
-                't.nombre as talla',
+                'oe.codigo as oe_codigo',
+                'oe.nombre as oe_nombre',
                 DB::raw('COALESCE(ed.total_ingresado, 0) as total_ingresado'),
                 DB::raw('COALESCE(sd.total_salido, 0) as total_salido'),
                 DB::raw('(COALESCE(ed.total_ingresado, 0) - COALESCE(sd.total_salido, 0)) as existencia')
             )
             ->havingRaw('existencia > 0')
+            ->orderBy('oe.nombre')
             ->orderBy('m.nombre')
             ->get();
 
-        // ── Valor correcto por lote: (cantidad_inicial - salido) × precio ──
+        // ── Precio unitario promedio ponderado por material ──────────────
         $valoresPorMaterial = DB::table('entradas_detalle as ed')
             ->leftJoin(
                 DB::raw('(SELECT id_entrada_detalle, SUM(cantidad_salida) as salido
-                      FROM salidas_detalle
-                      GROUP BY id_entrada_detalle) as sd'),
+              FROM salidas_detalle
+              GROUP BY id_entrada_detalle) as sd'),
                 'sd.id_entrada_detalle', '=', 'ed.id'
             )
             ->select(
@@ -375,150 +371,174 @@ class ReportesController extends Controller
             ->groupBy('ed.id_material')
             ->pluck('valor_real', 'id_material');
 
-        // ══ ENCABEZADO ═════════════════════════════════════════════════
+        // ══ ENCABEZADO ═══════════════════════════════════════════════════
         $tabla = "
-    <table width='100%' style='border-collapse:collapse; font-family:Arial, sans-serif; margin-bottom:6px;'>
-        <tr>
-            <td style='width:20%; border:0.8px solid #000; padding:6px 8px;'>
-                <table width='100%'>
-                    <tr>
-                        <td style='width:35%; text-align:left;'>
-                            <img src='{$logoalcaldia}' style='height:40px'>
-                        </td>
-                        <td style='width:65%; text-align:left; color:#104e8c;
-                                    font-size:12px; font-weight:bold; line-height:1.4;'>
-                            SANTA ANA NORTE<br>EL SALVADOR
-                        </td>
-                    </tr>
-                </table>
-            </td>
-            <td style='width:60%; border-top:0.8px solid #000; border-bottom:0.8px solid #000;
-                        padding:8px; text-align:center; vertical-align:middle;'>
-                <div style='font-size:16px; font-weight:bold; color:#1a3a6b; letter-spacing:1px;'>
-                    REPORTE DE EXISTENCIAS DE E.P.P.
-                </div>
-                <div style='font-size:11px; color:#555; margin-top:3px;'>
-                    Equipo de Protección Personal — Fecha: <strong>{$fechaFormat}</strong>
-                </div>
-            </td>
-            <td style='width:20%; border:0.8px solid #000; padding:0; vertical-align:top;'>
-                <table width='100%' style='font-size:10px; border-collapse:collapse;'>
-                    <tr>
-                        <td style='border-right:0.8px solid #000; border-bottom:0.8px solid #000;
-                                    padding:4px 6px; font-weight:bold;'>Código:</td>
-                        <td style='border-bottom:0.8px solid #000; padding:4px 6px; text-align:center;'>
-                            SEAC-002-FICH
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style='border-right:0.8px solid #000; border-bottom:0.8px solid #000;
-                                    padding:4px 6px; font-weight:bold;'>Versión:</td>
-                        <td style='border-bottom:0.8px solid #000; padding:4px 6px; text-align:center;'>
-                            000
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style='border-right:0.8px solid #000; padding:4px 6px; font-weight:bold;'>
-                            Vigencia:
-                        </td>
-                        <td style='padding:4px 6px; text-align:center;'>22/10/2025</td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-    ";
+<table width='100%' style='border-collapse:collapse; font-family:Arial, sans-serif; margin-bottom:6px;'>
+    <tr>
+        <td style='width:22%; border:0.8px solid #000; padding:6px 8px;'>
+            <table width='100%'>
+                <tr>
+                    <td style='width:35%; text-align:left;'>
+                        <img src='{$logoalcaldia}' style='height:36px'>
+                    </td>
+                    <td style='width:65%; text-align:left; color:#000000;
+                                font-size:10px; font-weight:bold; line-height:1.3;'>
+                        SANTA ANA NORTE<br>EL SALVADOR
+                    </td>
+                </tr>
+            </table>
+        </td>
+        <td style='width:56%; border-top:0.8px solid #000; border-bottom:0.8px solid #000;
+                    padding:8px; text-align:center; vertical-align:middle;'>
+            <div style='font-size:14px; font-weight:bold; color:#000000; letter-spacing:1px;'>
+                REPORTE DE EXISTENCIAS DE E.P.P.
+            </div>
+            <div style='font-size:10px; color:#000000; margin-top:3px;'>
+                Equipo de Protección Personal — Fecha: <strong>{$fechaFormat}</strong>
+            </div>
+        </td>
+        <td style='width:22%; border:0.8px solid #000; padding:0; vertical-align:top;'>
+            <table width='100%' style='font-size:9px; border-collapse:collapse;'>
+                <tr>
+                    <td style='border-right:0.8px solid #000; border-bottom:0.8px solid #000;
+                                padding:3px 5px; font-weight:bold; color:#000000;'>Código:</td>
+                    <td style='border-bottom:0.8px solid #000; padding:3px 5px;
+                                text-align:center; color:#000000;'>
+                        SEAC-002-FICH
+                    </td>
+                </tr>
+                <tr>
+                    <td style='border-right:0.8px solid #000; border-bottom:0.8px solid #000;
+                                padding:3px 5px; font-weight:bold; color:#000000;'>Versión:</td>
+                    <td style='border-bottom:0.8px solid #000; padding:3px 5px;
+                                text-align:center; color:#000000;'>
+                        000
+                    </td>
+                </tr>
+                <tr>
+                    <td style='border-right:0.8px solid #000; padding:3px 5px;
+                                font-weight:bold; color:#000000;'>Vigencia:</td>
+                    <td style='padding:3px 5px; text-align:center; color:#000000;'>22/10/2025</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+";
 
-        // ── Sin datos ──────────────────────────────────────────────────
+        // ── Sin datos ─────────────────────────────────────────────────────
         if ($existencias->isEmpty()) {
             $tabla .= "
-        <div style='text-align:center; margin-top:60px; font-family:Arial, sans-serif;'>
-            <p style='font-size:13px; color:#888;'>No se encontraron existencias disponibles.</p>
-        </div>
-        ";
+<div style='text-align:center; margin-top:60px; font-family:Arial, sans-serif;'>
+    <p style='font-size:13px; color:#888;'>No se encontraron existencias disponibles.</p>
+</div>
+";
         } else {
 
-            // ══ TABLA ══════════════════════════════════════════════════
+            // ── Agrupar por Objeto Específico ─────────────────────────────
+            $agrupado = $existencias->groupBy(function ($item) {
+                return $item->oe_codigo . '|' . $item->oe_nombre;
+            });
+
             $tabla .= "
-        <table width='100%' style='border-collapse:collapse; font-family:Arial, sans-serif; margin-top:10px;'>
-            <thead>
-                <tr>
-                    <th style='background:#1a3a6b; color:#fff; font-size:10px; font-weight:bold;
-                                border:1px solid #000; padding:6px 4px; text-align:center; width:3%;'>#</th>
-                    <th style='background:#1a3a6b; color:#fff; font-size:10px; font-weight:bold;
-                                border:1px solid #000; padding:6px 4px; text-align:center; width:8%;'>Código</th>
-                    <th style='background:#1a3a6b; color:#fff; font-size:10px; font-weight:bold;
-                                border:1px solid #000; padding:6px 4px; text-align:center; width:28%;'>Material</th>
-                    <th style='background:#1a3a6b; color:#fff; font-size:10px; font-weight:bold;
-                                border:1px solid #000; padding:6px 4px; text-align:center; width:12%;'>Marca</th>
-                    <th style='background:#1a3a6b; color:#fff; font-size:10px; font-weight:bold;
-                                border:1px solid #000; padding:6px 4px; text-align:center; width:9%;'>Color</th>
-                    <th style='background:#1a3a6b; color:#fff; font-size:10px; font-weight:bold;
-                                border:1px solid #000; padding:6px 4px; text-align:center; width:8%;'>Talla</th>
-                    <th style='background:#1a3a6b; color:#fff; font-size:10px; font-weight:bold;
-                                border:1px solid #000; padding:6px 4px; text-align:center; width:9%;'>Unidad</th>
-                    <th style='background:#1a3a6b; color:#fff; font-size:10px; font-weight:bold;
-                                border:1px solid #000; padding:6px 4px; text-align:center; width:10%;'>Existencia</th>
-                    <th style='background:#1a3a6b; color:#fff; font-size:10px; font-weight:bold;
-                                border:1px solid #000; padding:6px 4px; text-align:center; width:13%;'>Valor ($)</th>
-                </tr>
-            </thead>
-            <tbody>
+<table width='100%' style='border-collapse:collapse; font-family:Arial, sans-serif; margin-top:8px;'>
+    <thead>
+        <tr>
+            <th style='background:#f2f4f8; color:#000; font-size:9px; font-weight:bold;
+                        border:1px solid #000; padding:5px 3px; text-align:center; width:4%;'>#</th>
+            <th style='background:#f2f4f8; color:#000; font-size:9px; font-weight:bold;
+                        border:1px solid #000; padding:5px 3px; text-align:center; width:9%;'>Código</th>
+            <th style='background:#f2f4f8; color:#000; font-size:9px; font-weight:bold;
+                        border:1px solid #000; padding:5px 3px; text-align:center; width:30%;'>Material</th>
+            <th style='background:#f2f4f8; color:#000; font-size:9px; font-weight:bold;
+                        border:1px solid #000; padding:5px 3px; text-align:center; width:14%;'>Obj. Específico</th>
+            <th style='background:#f2f4f8; color:#000; font-size:9px; font-weight:bold;
+                        border:1px solid #000; padding:5px 3px; text-align:center; width:9%;'>Unidad</th>
+            <th style='background:#f2f4f8; color:#000; font-size:9px; font-weight:bold;
+                        border:1px solid #000; padding:5px 3px; text-align:center; width:9%;'>Existencia</th>
+            <th style='background:#f2f4f8; color:#000; font-size:9px; font-weight:bold;
+                        border:1px solid #000; padding:5px 3px; text-align:center; width:12%;'>Precio Unit. ($)</th>
+            <th style='background:#f2f4f8; color:#000; font-size:9px; font-weight:bold;
+                        border:1px solid #000; padding:5px 3px; text-align:center; width:13%;'>Total ($)</th>
+        </tr>
+    </thead>
+    <tbody>
+";
+
+            $cont         = 1;
+            $totalGeneral = 0;
+
+            foreach ($agrupado as $grupoKey => $items) {
+
+                [$oeCodigo, $oeNombre] = explode('|', $grupoKey, 2);
+                $oeLabel = trim($oeCodigo) !== ''
+                    ? "{$oeCodigo} - {$oeNombre}"
+                    : ($oeNombre ?: 'SIN OBJETO ESPECÍFICO');
+
+                $subtotalGrupo = 0;
+
+                foreach ($items as $item) {
+                    $existencia    = (int)   $item->existencia;
+                    $valorReal     = (float) ($valoresPorMaterial[$item->id] ?? 0);
+                    $precioUnit    = $existencia > 0 ? ($valorReal / $existencia) : 0;
+                    $totalItem     = $valorReal;
+                    $subtotalGrupo += $totalItem;
+                    $totalGeneral  += $totalItem;
+
+                    $tabla .= "
+        <tr>
+            <td style='border:1px solid #000; font-size:9px; padding:4px; text-align:center;'>{$cont}</td>
+            <td style='border:1px solid #000; font-size:9px; padding:4px; text-align:center;'>{$item->codigo}</td>
+            <td style='border:1px solid #000; font-size:9px; padding:4px;'>{$item->material}</td>
+            <td style='border:1px solid #000; font-size:9px; padding:4px; text-align:center;'>" . ($item->oe_codigo ?? '—') . "</td>
+            <td style='border:1px solid #000; font-size:9px; padding:4px; text-align:center;'>" . ($item->unidad ?? '—') . "</td>
+            <td style='border:1px solid #000; font-size:9px; padding:4px; text-align:center;'>{$existencia}</td>
+            <td style='border:1px solid #000; font-size:9px; padding:4px; text-align:right;'>
+                \$ " . number_format($precioUnit, 2) . "
+            </td>
+            <td style='border:1px solid #000; font-size:9px; padding:4px; text-align:right;'>
+                \$ " . number_format($totalItem, 2) . "
+            </td>
+        </tr>
         ";
+                    $cont++;
+                }
 
-            $cont       = 1;
-            $totalValor = 0;
-
-            foreach ($existencias as $item) {
-                $existencia  = (int)   $item->existencia;
-                $valor       = (float) ($valoresPorMaterial[$item->id] ?? 0);
-                $totalValor += $valor;
-
+                // ── Subtotal por Objeto Específico ──
                 $tabla .= "
-            <tr>
-                <td style='border:1px solid #ccc; font-size:10px; padding:5px;
-                            text-align:center; color:#666;'>{$cont}</td>
-                <td style='border:1px solid #ccc; font-size:10px; padding:5px;
-                            text-align:center; font-weight:bold; color:#1a3a6b;'>{$item->codigo}</td>
-                <td style='border:1px solid #ccc; font-size:10px; padding:5px;
-                            font-weight:600; color:#1a2d55;'>{$item->material}</td>
-                <td style='border:1px solid #ccc; font-size:10px; padding:5px;
-                            text-align:center;'>" . ($item->marca  ?? '—') . "</td>
-                <td style='border:1px solid #ccc; font-size:10px; padding:5px;
-                            text-align:center;'>" . ($item->color  ?? '—') . "</td>
-                <td style='border:1px solid #ccc; font-size:10px; padding:5px;
-                            text-align:center;'>" . ($item->talla  ?? '—') . "</td>
-                <td style='border:1px solid #ccc; font-size:10px; padding:5px;
-                            text-align:center;'>" . ($item->unidad ?? '—') . "</td>
-                <td style='border:1px solid #ccc; font-size:10px; padding:5px;
-                            text-align:center;'>{$existencia}</td>
-                <td style='border:1px solid #ccc; font-size:10px; padding:5px; text-align:right;'>
-                    \$ " . number_format($valor, 2) . "
-                </td>
-            </tr>
-            ";
-
-                $cont++;
+        <tr>
+            <td colspan='7' style='border:1px solid #000; padding:5px 8px; text-align:right;
+                                    font-size:9px; font-weight:bold;
+                                    background:#f2f4f8; color:#000;'>
+                SUBTOTAL — {$oeLabel}
+            </td>
+            <td style='border:1px solid #000; padding:5px; text-align:right;
+                        font-size:9px; font-weight:bold;
+                        background:#f2f4f8; color:#000;'>
+                \$ " . number_format($subtotalGrupo, 2) . "
+            </td>
+        </tr>
+        ";
             }
 
             $tabla .= "
-            </tbody>
-            <tfoot>
-                <tr>
-                    <td colspan='8' style='border:1px solid #000; padding:7px 8px; text-align:right;
-                                            font-size:11px; font-weight:bold;
-                                            background:#1a3a6b; color:#fff; letter-spacing:.5px;'>
-                        TOTAL GENERAL
-                    </td>
-                    <td style='border:1px solid #000; padding:7px; text-align:right;
-                                font-size:12px; font-weight:bold;
-                                background:#1a3a6b; color:#fff;'>
-                        \$ " . number_format($totalValor, 2) . "
-                    </td>
-                </tr>
-            </tfoot>
-        </table>
-        ";
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan='7' style='border:1px solid #000; padding:7px 8px; text-align:right;
+                                    font-size:11px; font-weight:bold;
+                                    background:#f9fafb; color:#000; letter-spacing:.5px;'>
+                TOTAL GENERAL
+            </td>
+            <td style='border:1px solid #000; padding:7px; text-align:right;
+                        font-size:12px; font-weight:bold;
+                        background:#f9fafb; color:#000;'>
+                \$ " . number_format($totalGeneral, 2) . "
+            </td>
+        </tr>
+    </tfoot>
+</table>
+";
         }
 
         // ── Generar PDF ────────────────────────────────────────────────
@@ -530,11 +550,380 @@ class ReportesController extends Controller
     }
 
 
+    public function reportePDFInicialPorPeriodos($desde, $hasta)
+    {
+        $start = Carbon::parse($desde)->startOfDay();
+        $end   = Carbon::parse($hasta)->endOfDay();
 
+        $desdeFormat = Carbon::parse($desde)->format('d/m/Y');
+        $hastaFormat = Carbon::parse($hasta)->format('d/m/Y');
 
+        $rows = DB::select("
+        WITH movimientos AS (
+            SELECT
+                ed.id_material,
+                COALESCE(NULLIF(oe.codigo, ''), 'SIN-CODIGO') AS codigo,
+                m.nombre AS descripcion,
+                ed.precio,
+                e.fecha AS fecha_movimiento,
+                ed.cantidad_inicial AS entrada,
+                0 AS salida
+            FROM entradas_detalle ed
+            INNER JOIN entradas e   ON e.id  = ed.id_entradas
+            INNER JOIN materiales m ON m.id  = ed.id_material
+            LEFT  JOIN objeto_especifico oe ON oe.id = m.id_objespecifico
 
+            UNION ALL
 
+            SELECT
+                ed.id_material,
+                COALESCE(NULLIF(oe.codigo, ''), 'SIN-CODIGO') AS codigo,
+                m.nombre AS descripcion,
+                ed.precio,
+                s.fecha AS fecha_movimiento,
+                0 AS entrada,
+                sd.cantidad_salida AS salida
+            FROM salidas_detalle sd
+            INNER JOIN salidas s            ON s.id  = sd.id_salida
+            INNER JOIN entradas_detalle ed  ON ed.id = sd.id_entrada_detalle
+            INNER JOIN materiales m         ON m.id  = ed.id_material
+            LEFT  JOIN objeto_especifico oe ON oe.id = m.id_objespecifico
+        )
+        SELECT
+            id_material, codigo, descripcion,
+            MAX(precio) AS precio,
 
+            SUM(CASE WHEN fecha_movimiento <  ? THEN entrada - salida ELSE 0 END) AS saldo_inicial_cant,
+            SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN entrada ELSE 0 END) AS entradas_mes_cant,
+            SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN salida  ELSE 0 END) AS salidas_mes_cant,
+
+            (
+                SUM(CASE WHEN fecha_movimiento <  ? THEN entrada - salida ELSE 0 END)
+              + SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN entrada ELSE 0 END)
+              - SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN salida  ELSE 0 END)
+            ) AS saldo_final_cant,
+
+            SUM(CASE WHEN fecha_movimiento <  ? THEN entrada - salida ELSE 0 END) * MAX(precio) AS saldo_inicial_money,
+            SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN entrada ELSE 0 END) * MAX(precio) AS entradas_mes_money,
+            SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN salida  ELSE 0 END) * MAX(precio) AS salidas_mes_money,
+
+            (
+                SUM(CASE WHEN fecha_movimiento <  ? THEN entrada - salida ELSE 0 END)
+              + SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN entrada ELSE 0 END)
+              - SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN salida  ELSE 0 END)
+            ) * MAX(precio) AS saldo_final_money
+
+        FROM movimientos
+        GROUP BY id_material, codigo, descripcion
+        ORDER BY codigo, descripcion
+    ", [
+            $start->toDateString(),
+            $start->toDateString(), $end->toDateString(),
+            $start->toDateString(), $end->toDateString(),
+            $start->toDateString(),
+            $start->toDateString(), $end->toDateString(),
+            $start->toDateString(), $end->toDateString(),
+            $start->toDateString(),
+            $start->toDateString(), $end->toDateString(),
+            $start->toDateString(), $end->toDateString(),
+            $start->toDateString(),
+            $start->toDateString(), $end->toDateString(),
+            $start->toDateString(), $end->toDateString(),
+        ]);
+
+        // ── Filtrar filas completamente en cero ───────────────────────────────────
+        $rows = array_values(array_filter($rows, function ($r) {
+            return !((float)($r->saldo_inicial_cant ?? 0) == 0
+                && (float)($r->entradas_mes_cant  ?? 0) == 0
+                && (float)($r->salidas_mes_cant   ?? 0) == 0
+                && (float)($r->saldo_final_cant   ?? 0) == 0);
+        }));
+
+        // ── Totales y agrupado por código ─────────────────────────────────────────
+        $totales = [
+            'inicial_cant'   => 0, 'inicial_money'  => 0.0,
+            'entradas_cant'  => 0, 'entradas_money' => 0.0,
+            'salidas_cant'   => 0, 'salidas_money'  => 0.0,
+            'final_cant'     => 0, 'final_money'    => 0.0,
+        ];
+        $sumPorCodigo = [];
+
+        foreach ($rows as $r) {
+            $totales['inicial_cant']   += (int)   ($r->saldo_inicial_cant  ?? 0);
+            $totales['entradas_cant']  += (int)   ($r->entradas_mes_cant   ?? 0);
+            $totales['salidas_cant']   += (int)   ($r->salidas_mes_cant    ?? 0);
+            $totales['final_cant']     += (int)   ($r->saldo_final_cant    ?? 0);
+            $totales['inicial_money']  += (float) ($r->saldo_inicial_money ?? 0);
+            $totales['entradas_money'] += (float) ($r->entradas_mes_money  ?? 0);
+            $totales['salidas_money']  += (float) ($r->salidas_mes_money   ?? 0);
+            $totales['final_money']    += (float) ($r->saldo_final_money   ?? 0);
+
+            $cod = $r->codigo ?? 'SIN-CODIGO';
+            if (!isset($sumPorCodigo[$cod])) {
+                $sumPorCodigo[$cod] = [
+                    'codigo'        => $cod,
+                    'inicial_cant'  => 0, 'inicial_money'  => 0.0,
+                    'entradas_cant' => 0, 'entradas_money' => 0.0,
+                    'salidas_cant'  => 0, 'salidas_money'  => 0.0,
+                    'final_cant'    => 0, 'final_money'    => 0.0,
+                ];
+            }
+            $sumPorCodigo[$cod]['inicial_cant']   += (int)   ($r->saldo_inicial_cant  ?? 0);
+            $sumPorCodigo[$cod]['entradas_cant']  += (int)   ($r->entradas_mes_cant   ?? 0);
+            $sumPorCodigo[$cod]['salidas_cant']   += (int)   ($r->salidas_mes_cant    ?? 0);
+            $sumPorCodigo[$cod]['final_cant']     += (int)   ($r->saldo_final_cant    ?? 0);
+            $sumPorCodigo[$cod]['inicial_money']  += (float) ($r->saldo_inicial_money ?? 0);
+            $sumPorCodigo[$cod]['entradas_money'] += (float) ($r->entradas_mes_money  ?? 0);
+            $sumPorCodigo[$cod]['salidas_money']  += (float) ($r->salidas_mes_money   ?? 0);
+            $sumPorCodigo[$cod]['final_money']    += (float) ($r->saldo_final_money   ?? 0);
+        }
+
+        // ── PDF ───────────────────────────────────────────────────────────────────
+        $mpdf = new \Mpdf\Mpdf([
+            'tempDir'      => sys_get_temp_dir(),
+            'format'       => 'LETTER',
+            'orientation'  => 'L',
+            'default_font' => 'arial',
+        ]);
+        $mpdf->SetTitle('Control de Entradas/Salidas por Período');
+        $mpdf->showImageErrors = false;
+
+        $logoalcaldia = public_path('images/gobiernologo.jpg');
+
+        if (file_exists(public_path('css/cssbodega.css'))) {
+            $mpdf->WriteHTML(
+                file_get_contents(public_path('css/cssbodega.css')),
+                \Mpdf\HTMLParserMode::HEADER_CSS
+            );
+        }
+
+        // ══ ENCABEZADO (igual a la imagen) ═══════════════════════════════════════
+        $html = "
+<table width='100%' style='border-collapse:collapse; font-family:Arial,sans-serif; margin-bottom:6px;'>
+    <tr>
+        <td style='width:22%; border:0.8px solid #000; padding:6px 8px;'>
+            <table width='100%'>
+                <tr>
+                    <td style='width:35%; text-align:left;'>
+                        <img src='{$logoalcaldia}' style='height:40px'>
+                    </td>
+                    <td style='width:65%; text-align:left; color:#104e8c; font-size:11px; font-weight:bold; line-height:1.4;'>
+                        SANTA ANA NORTE<br>EL SALVADOR
+                    </td>
+                </tr>
+            </table>
+        </td>
+        <td style='width:56%; border-top:0.8px solid #000; border-bottom:0.8px solid #000;
+                    padding:8px; text-align:center; vertical-align:middle;'>
+            <div style='font-size:15px; font-weight:bold; color:#000; letter-spacing:.5px;'>
+                CONTROL DE ENTRADAS / SALIDAS
+            </div>
+        </td>
+        <td style='width:22%; border:0.8px solid #000; padding:0; vertical-align:top;'>
+            <table width='100%' style='font-size:10px; border-collapse:collapse;'>
+                <tr>
+                    <td style='border-right:0.8px solid #000; border-bottom:0.8px solid #000; padding:4px 6px; font-weight:bold;'>Código:</td>
+                    <td style='border-bottom:0.8px solid #000; padding:4px 6px; text-align:center;'></td>
+                </tr>
+                <tr>
+                    <td style='border-right:0.8px solid #000; border-bottom:0.8px solid #000; padding:4px 6px; font-weight:bold;'>Versión:</td>
+                    <td style='border-bottom:0.8px solid #000; padding:4px 6px; text-align:center;'>000</td>
+                </tr>
+                <tr>
+                    <td style='border-right:0.8px solid #000; padding:4px 6px; font-weight:bold;'>Fecha de vigencia:</td>
+                    <td style='padding:4px 6px; text-align:center;'></td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+<br>
+<strong>Del {$desdeFormat} al {$hastaFormat}</strong><br>
+";
+
+        // ══ TABLA DETALLE (sin colores, estilo simple como la imagen) ═════════════
+        $html .= "
+<table width='100%' border='1' cellspacing='0' cellpadding='4'
+       style='border-collapse:collapse; font-family:Arial,sans-serif; font-size:11px; margin-top:8px;'>
+    <thead style='background:#f2f4f8;'>
+        <tr>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:center; width:3%;'>#</th>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:center; width:9%;'>Código</th>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:center; width:20%;'>Descripción / Nombre</th>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:center; width:7%;'>PRECIO</th>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:center; width:6%;'>INICIAL</th>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:right;  width:7%;'>\$ INICIAL</th>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:center; width:6%;'>ENTRADAS</th>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:right;  width:7%;'>\$ ENTRADAS</th>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:center; width:6%;'>SALIDAS</th>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:right;  width:7%;'>\$ SALIDAS</th>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:center; width:6%;'>SALDO</th>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:right;  width:7%;'>\$ SALDO</th>
+        </tr>
+    </thead>
+    <tbody>
+";
+
+        $i = 1;
+        foreach ($rows as $r) {
+            $html .= "
+    <tr>
+       <td style='border:1px solid #000; padding:4px; text-align:center;'>{$i}</td>
+        <td style='border:1px solid #000; padding:4px; text-align:center;'>" . e($r->codigo ?? '—') . "</td>
+        <td style='border:1px solid #000; padding:4px;'>" . e($r->descripcion ?? '—') . "</td>
+        <td style='border:1px solid #000; padding:4px; text-align:right;'>\$" . number_format($r->precio ?? 0, 4) . "</td>
+        <td style='border:1px solid #000; padding:4px; text-align:right;'>" . number_format($r->saldo_inicial_cant ?? 0) . "</td>
+        <td style='border:1px solid #000; padding:4px; text-align:right;'>\$" . number_format($r->saldo_inicial_money ?? 0, 2) . "</td>
+        <td style='border:1px solid #000; padding:4px; text-align:right;'>" . number_format($r->entradas_mes_cant ?? 0) . "</td>
+        <td style='border:1px solid #000; padding:4px; text-align:right;'>\$" . number_format($r->entradas_mes_money ?? 0, 2) . "</td>
+        <td style='border:1px solid #000; padding:4px; text-align:right;'>" . number_format($r->salidas_mes_cant ?? 0) . "</td>
+        <td style='border:1px solid #000; padding:4px; text-align:right;'>\$" . number_format($r->salidas_mes_money ?? 0, 2) . "</td>
+        <td style='border:1px solid #000; padding:4px; text-align:right;'>" . number_format($r->saldo_final_cant ?? 0) . "</td>
+        <td style='border:1px solid #000; padding:4px; text-align:right;'>\$" . number_format($r->saldo_final_money ?? 0, 2) . "</td>
+    </tr>
+    ";
+            $i++;
+        }
+
+        if (empty($rows)) {
+            $html .= "<tr><td colspan='12' style='text-align:center; color:#888; padding:12px;'>Sin registros en el rango seleccionado.</td></tr>";
+        }
+
+        // ── Fila totales ──────────────────────────────────────────────────────────
+        $html .= "
+    </tbody>
+    <tfoot>
+        <tr style='font-weight:bold; background:#f9fafb;'>
+            <td colspan='4' style='border:1px solid #000; padding:5px 8px; text-align:right;'>Totales:</td>
+            <td style='border:1px solid #000; padding:5px; text-align:right;'>" . number_format($totales['inicial_cant']) . "</td>
+            <td style='border:1px solid #000; padding:5px; text-align:right;'>\$" . number_format($totales['inicial_money'], 2) . "</td>
+            <td style='border:1px solid #000; padding:5px; text-align:right;'>" . number_format($totales['entradas_cant']) . "</td>
+            <td style='border:1px solid #000; padding:5px; text-align:right;'>\$" . number_format($totales['entradas_money'], 2) . "</td>
+            <td style='border:1px solid #000; padding:5px; text-align:right;'>" . number_format($totales['salidas_cant']) . "</td>
+            <td style='border:1px solid #000; padding:5px; text-align:right;'>\$" . number_format($totales['salidas_money'], 2) . "</td>
+            <td style='border:1px solid #000; padding:5px; text-align:right;'>" . number_format($totales['final_cant']) . "</td>
+            <td style='border:1px solid #000; padding:5px; text-align:right;'>\$" . number_format($totales['final_money'], 2) . "</td>
+        </tr>
+    </tfoot>
+</table>
+";
+
+        // ══ RESUMEN DEL PERÍODO (sin colores) ════════════════════════════════════
+        $html .= "
+<br>
+<table width='60%' border='1' cellspacing='0' cellpadding='6'
+       style='border-collapse:collapse; font-family:Arial,sans-serif; font-size:12px;'>
+    <tr style='background:#eef3ff; font-weight:bold; text-align:center;'>
+        <td colspan='3'>Resumen del período {$desdeFormat} - {$hastaFormat}</td>
+    </tr>
+    <tr style='font-weight:bold; background:#f9fafb;'>
+        <td></td>
+        <td style='text-align:right;'>Cantidad</td>
+        <td style='text-align:right;'>Dinero ($)</td>
+    </tr>
+    <tr>
+        <td>Ingresó (Entradas del mes)</td>
+        <td style='text-align:right;'>" . number_format($totales['entradas_cant']) . "</td>
+        <td style='text-align:right;'>\$" . number_format($totales['entradas_money'], 2) . "</td>
+    </tr>
+    <tr>
+        <td>Salió (Salidas del mes)</td>
+        <td style='text-align:right;'>" . number_format($totales['salidas_cant']) . "</td>
+        <td style='text-align:right;'>\$" . number_format($totales['salidas_money'], 2) . "</td>
+    </tr>
+    <tr>
+        <td>Disponible al cierre (Saldo final)</td>
+        <td style='text-align:right;'>" . number_format($totales['final_cant']) . "</td>
+        <td style='text-align:right;'>\$" . number_format($totales['final_money'], 2) . "</td>
+    </tr>
+</table>
+";
+
+        // ══ RESUMEN POR OBJETO ESPECÍFICO (sin colores) ═══════════════════════════
+        if (!empty($sumPorCodigo)) {
+            $totalSaldoFinalCodigos = 0;
+
+            $html .= "
+<br><br>
+<table width='100%' border='1' cellspacing='0' cellpadding='4'
+       style='border-collapse:collapse; font-family:Arial,sans-serif; font-size:11px;'>
+    <thead style='background:#f2f4f8;'>
+        <tr>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:center; width:4%;'>#</th>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:center; width:10%;'>Código</th>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:center; width:6%;'>INICIAL</th>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:right;  width:10%;'>\$ INICIAL</th>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:center; width:6%;'>ENTRADAS</th>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:right;  width:10%;'>\$ ENTRADAS</th>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:center; width:6%;'>SALIDAS</th>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:right;  width:10%;'>\$ SALIDAS</th>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:center; width:6%;'>SALDO</th>
+            <th style='border:1px solid #000; padding:5px 3px; text-align:right;  width:10%;'>\$ SALDO</th>
+        </tr>
+    </thead>
+    <tbody>
+";
+
+            $j = 1;
+            foreach ($sumPorCodigo as $s) {
+                $totalSaldoFinalCodigos += (float) $s['final_money'];
+                $html .= "
+    <tr>
+      <td style='border:1px solid #000; padding:4px; text-align:center;'>{$j}</td>
+<td style='border:1px solid #000; padding:4px; text-align:center;'>" . e($s['codigo']) . "</td>
+<td style='border:1px solid #000; padding:4px; text-align:right;'>" . number_format($s['inicial_cant']) . "</td>
+<td style='border:1px solid #000; padding:4px; text-align:right;'>\$" . number_format($s['inicial_money'], 2) . "</td>
+<td style='border:1px solid #000; padding:4px; text-align:right;'>" . number_format($s['entradas_cant']) . "</td>
+<td style='border:1px solid #000; padding:4px; text-align:right;'>\$" . number_format($s['entradas_money'], 2) . "</td>
+<td style='border:1px solid #000; padding:4px; text-align:right;'>" . number_format($s['salidas_cant']) . "</td>
+<td style='border:1px solid #000; padding:4px; text-align:right;'>\$" . number_format($s['salidas_money'], 2) . "</td>
+<td style='border:1px solid #000; padding:4px; text-align:right;'>" . number_format($s['final_cant']) . "</td>
+<td style='border:1px solid #000; padding:4px; text-align:right;'>\$" . number_format($s['final_money'], 2) . "</td>
+    </tr>
+    ";
+                $j++;
+            }
+
+            $html .= "
+    </tbody>
+    <tfoot>
+        <tr style='font-weight:bold; background:#f9fafb;'>
+            <td colspan='9' style='border:1px solid #000; padding:5px 8px; text-align:right;'>TOTAL</td>
+            <td style='border:1px solid #000; padding:5px; text-align:right;'>\$" . number_format($totalSaldoFinalCodigos, 2) . "</td>
+        </tr>
+    </tfoot>
+</table>
+";
+        }
+
+        // ══ FIRMA ═════════════════════════════════════════════════════════════════
+        $html .= "
+        <table width='100%' style='border-collapse:collapse;'>
+            <tr>
+                <td style='height:60px;'></td>
+            </tr>
+        </table>
+        <table width='100%' style='border-collapse:collapse;'>
+            <tr>
+                <td style='text-align:center; font-family:Arial,sans-serif; font-size:13px;'>
+                    F._____________________________
+                </td>
+            </tr>
+            <tr>
+                <td style='height:6px;'></td>
+            </tr>
+            <tr>
+                <td style='text-align:center; font-family:Arial,sans-serif; font-size:12px; font-weight:bold;'>
+                    UNIDAD DE SEGURIDAD Y SALUD OCUPACIONAL
+                </td>
+            </tr>
+        </table>
+        ";
+
+        $mpdf->setFooter('Página {PAGENO} de {nb}');
+        $mpdf->WriteHTML($html, \Mpdf\HTMLParserMode::HTML_BODY);
+        $mpdf->Output();
+    }
 
 
 }

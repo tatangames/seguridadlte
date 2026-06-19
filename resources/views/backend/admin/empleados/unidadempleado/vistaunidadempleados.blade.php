@@ -81,7 +81,7 @@
             <div class="row mb-2">
                 <div class="col-sm-6">
                     <button type="button"
-                            style="font-weight:bold; background-color:#2156af; color:white !important;"
+                            style="font-weight:normal; background-color:#2156af; color:white !important;"
                             id="btn-nueva-unidad"
                             class="btn btn-primary btn-sm">
                         <i class="fas fa-plus"></i> Nueva Unidad

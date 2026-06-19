@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Sistema;
 
 use App\Http\Controllers\Controller;
+use App\Models\Distrito;
+use App\Models\Empleado;
 use App\Models\Entradas;
 use App\Models\EntradasDetalle;
 use App\Models\InformacionGeneral;
@@ -18,16 +20,51 @@ use Illuminate\Support\Facades\Validator;
 
 class HistorialSalidasController extends Controller
 {
-
     public function indexHistorialSalidas()
     {
-        return view('backend.admin.historial.salidas.vistahistorialsalidas');
+        $arrayDistrito = Distrito::orderBy('nombre', 'ASC')->get();
+
+        return view('backend.admin.historial.salidas.vistahistorialsalidas',
+            compact('arrayDistrito'));
     }
 
     public function tablaHistorialSalidas(Request $request)
     {
-        $arraySalidas = Salidas::with(['empleado'])
-            ->orderBy('fecha', 'desc')
+        $tieneFiltro = $request->filled('id_distrito')
+            || $request->filled('id_unidad')
+            || $request->filled('id_empleado')
+            || $request->filled('fecha_desde')
+            || $request->filled('fecha_hasta');
+
+        if (!$tieneFiltro) {
+            $arraySalidas = collect();
+            return view('backend.admin.historial.salidas.tablahistorialsalidas',
+                compact('arraySalidas'));
+        }
+
+        $query = Salidas::with(['empleado']);
+
+        if ($request->filled('id_empleado')) {
+            $query->where('id_empleado', $request->id_empleado);
+        } elseif ($request->filled('id_unidad')) {
+            $query->whereHas('empleado', function ($q) use ($request) {
+                $q->where('id_unidad_empleado', $request->id_unidad);
+            });
+        } elseif ($request->filled('id_distrito')) {
+            $query->whereHas('empleado.unidadEmpleado', function ($q) use ($request) {
+                $q->where('id_distrito', $request->id_distrito);
+            });
+        }
+
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('fecha', '>=', $request->fecha_desde);
+        }
+
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('fecha', '<=', $request->fecha_hasta);
+        }
+
+        $arraySalidas = $query->orderBy('fecha', 'desc')
             ->get()
             ->map(function ($item) {
                 $item->fecha_fmt = date('d/m/Y', strtotime($item->fecha));
@@ -40,25 +77,55 @@ class HistorialSalidasController extends Controller
 
     public function informacionSalida(Request $request)
     {
-        $salida = Salidas::find($request->id);
+        $salida = Salidas::with('empleado.unidadEmpleado.distrito', 'empleado.cargo', 'empleado.jefe')
+            ->find($request->id);
 
         if (!$salida) {
             return response()->json(['success' => 0]);
         }
 
+        $empleado = $salida->empleado;
+
         return response()->json([
             'success' => 1,
             'salida'  => [
-                'id'             => $salida->id,
-                'fecha'          => $salida->fecha,
-                'descripcion'    => $salida->descripcion,
-                'area'           => $salida->area,
-                'cargo'          => $salida->cargo,
-                'colaborador'    => $salida->colaborador,
-                'jefe_inmediato' => $salida->jefe_inmediato,
-                'jefe_firma'     => $salida->jefe_firma,
-                'cargo_firma'    => $salida->cargo_firma,
-                'material_linea' => $salida->material_linea,
+                'id'                 => $salida->id,
+                'fecha'              => $salida->fecha,
+                'descripcion'        => $salida->descripcion,
+                'cargo'              => $salida->cargo,
+                'colaborador'        => $salida->colaborador,
+                'jefe_inmediato'     => $salida->jefe_inmediato,
+                'jefe_firma'         => $salida->jefe_firma,
+                'cargo_firma'        => $salida->cargo_firma,
+                'material_linea'     => $salida->material_linea,
+
+                // Para precargar la cascada distrito -> unidad -> empleado
+                'id_empleado'        => $empleado->id ?? null,
+                'id_unidad_empleado' => $empleado->unidadEmpleado->id ?? null,
+                'id_distrito'        => $empleado->unidadEmpleado->distrito->id ?? null,
+            ]
+        ]);
+    }
+
+    /**
+     * Devuelve nombre, cargo y jefe inmediato de un empleado puntual.
+     * Usado para repoblar los campos de solo lectura al cambiar el select de empleado.
+     */
+    public function datosEmpleado(Request $request)
+    {
+        $empleado = Empleado::with('cargo', 'jefe')->find($request->id);
+
+        if (!$empleado) {
+            return response()->json(['success' => 0]);
+        }
+
+        return response()->json([
+            'success'  => 1,
+            'empleado' => [
+                'id'           => $empleado->id,
+                'nombre'       => $empleado->nombre,
+                'cargo_nombre' => $empleado->cargo->nombre ?? null,
+                'jefe_nombre'  => $empleado->jefe->nombre  ?? null,
             ]
         ]);
     }
@@ -68,6 +135,12 @@ class HistorialSalidasController extends Controller
         $salida = Salidas::find($request->id);
 
         if (!$salida) {
+            return response()->json(['success' => 0]);
+        }
+
+        $empleado = Empleado::with('cargo', 'jefe')->find($request->id_empleado);
+
+        if (!$empleado) {
             return response()->json(['success' => 0]);
         }
 
@@ -92,11 +165,11 @@ class HistorialSalidasController extends Controller
         }
 
         $salida->fecha          = $request->fecha;
+        $salida->id_empleado    = $empleado->id;
         $salida->descripcion    = $request->descripcion    ?: null;
-        $salida->area           = $request->area           ?: null;
-        $salida->cargo          = $request->cargo          ?: null;
-        $salida->colaborador    = $request->colaborador    ?: null;
-        $salida->jefe_inmediato = $request->jefe_inmediato ?: null;
+        $salida->cargo          = $empleado->cargo->nombre ?? null;
+        $salida->colaborador    = $request->colaborador    ?: $empleado->nombre;
+        $salida->jefe_inmediato = $empleado->jefe->nombre  ?? null;
         $salida->jefe_firma     = $request->jefe_firma     ?: null;
         $salida->cargo_firma    = $request->cargo_firma    ?: null;
         $salida->material_linea = $request->material_linea ?: null;
@@ -252,7 +325,4 @@ class HistorialSalidasController extends Controller
 
         return response()->json(['success' => 1]);
     }
-
-
-
 }

@@ -120,6 +120,7 @@
 
         .modal-xl { max-width: 95% !important; width: 1200px; }
         @media (max-width: 1280px) { .modal-xl { width: 98%; } }
+
         .modal-section-title {
             font-size: 11px; font-weight: 700; text-transform: uppercase;
             letter-spacing: .8px; color: #94a3b8; margin: 18px 0 10px;
@@ -127,6 +128,59 @@
         }
         .form-label-styled { font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px; display: block; }
         .required-star { color: #ef4444; }
+
+        /* ══ Fix Select2 + modal (z-index, tamaño y búsqueda) ══════════════════ */
+        .select2-container--open,
+        .select2-dropdown,
+        .select2-dropdown--below,
+        .select2-dropdown--above { z-index: 99999 !important; }
+        .select2-dropdown { box-sizing: border-box !important; }
+
+        /* Selection (campo cerrado) alineado con .form-control de Bootstrap */
+        .modal .select2-container--bootstrap-5 .select2-selection { min-height: 38px !important; }
+        .modal .select2-container--bootstrap-5 .select2-selection--single {
+            height: 38px !important;
+            padding: 0.375rem 2.25rem 0.375rem 0.75rem !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        .modal .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+            padding: 0 !important; line-height: 1.5 !important; color: #212529 !important;
+        }
+        .modal .select2-container--bootstrap-5 .select2-selection--single .select2-selection__placeholder {
+            color: #6c757d !important;
+        }
+        .modal .select2-container--bootstrap-5 .select2-selection--single .select2-selection__arrow {
+            height: 36px !important; top: 1px !important; right: 6px !important;
+        }
+
+        /* Campo de búsqueda del dropdown */
+        .select2-search--dropdown { padding: 8px !important; }
+        .select2-search--dropdown .select2-search__field {
+            width: 100% !important;
+            padding: 6px 10px !important;
+            border: 1px solid #ced4da !important;
+            border-radius: 4px !important;
+            font-size: 13px !important;
+            box-sizing: border-box !important;
+            pointer-events: auto !important;
+            user-select: text !important;
+            -webkit-user-select: text !important;
+            cursor: text !important;
+        }
+        .select2-search--dropdown .select2-search__field:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 3px rgba(59,130,246,.15) !important;
+            outline: none !important;
+        }
+
+        /* Opciones del dropdown */
+        .select2-container--bootstrap-5 .select2-results__option {
+            font-size: 13px !important; padding: 6px 12px !important;
+        }
+        .select2-container--bootstrap-5 .select2-results__option--highlighted {
+            background-color: #3b82f6 !important; color: #fff !important;
+        }
 
         @media (max-width: 768px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -381,7 +435,6 @@
                                     </div>
                                 </div>
 
-                                {{-- MODAL AGREGAR — sección Clasificación, segunda fila --}}
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="form-group">
@@ -397,7 +450,6 @@
                                         </div>
                                     </div>
                                 </div>
-
 
                                 <div class="modal-section-title"><i class="fas fa-sticky-note" style="margin-right:5px"></i>Notas</div>
                                 <div class="row">
@@ -496,7 +548,6 @@
                                     </div>
                                 </div>
 
-                                {{-- MODAL EDITAR — sección Clasificación, segunda fila --}}
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="form-group">
@@ -541,133 +592,105 @@
     <script>
         var urlTabla = "{{ url('admin/materiales/tabla') }}";
 
+        // ══════════════════════════════════════════════════════════════════════
+        // FIX DEFINITIVO: el modal de Bootstrap captura el foco con _enforceFocus
+        // y se lo roba al campo de búsqueda de Select2 (que vive en el <body>).
+        // Esto causaba que no se pudiera escribir, sobre todo con zoom > 100%.
+        // Lo desactivamos una sola vez. Cubre Bootstrap 4 (_enforceFocus) y
+        // Bootstrap 5 (_focustrap) por si acaso.
+        // ══════════════════════════════════════════════════════════════════════
+        if (typeof $ !== 'undefined' && $.fn.modal && $.fn.modal.Constructor && $.fn.modal.Constructor.prototype) {
+            var __modalProto = $.fn.modal.Constructor.prototype;
+            if (__modalProto._enforceFocus) { __modalProto._enforceFocus = function () {}; } // BS4 / AdminLTE 3
+            if (__modalProto.enforceFocus)  { __modalProto.enforceFocus  = function () {}; } // BS3
+            if (__modalProto._focustrap)    { __modalProto._focustrap = { activate: function(){}, deactivate: function(){} }; } // BS5
+        }
+
+        // ── Select2: body como padre (resuelve corte por overflow y zoom) ───────
         function initSelect2(id) {
             $('#' + id).select2({
                 theme: "bootstrap-5",
-                dropdownParent: $('#' + id).closest('.modal'),
-                language: { noResults: function(){ return "Búsqueda no encontrada"; } }
+                dropdownParent: $('body'),
+                language: { noResults: function(){ return "Búsqueda no encontrada"; } },
+                width: '100%'
             });
         }
 
-
+        // ── DataTable ────────────────────────────────────────────────────────────
         function iniciarDataTable() {
-
             if ($.fn.DataTable.isDataTable('#tabla')) {
                 $('#tabla').DataTable().destroy();
             }
-
             $('#tabla').DataTable({
-                paging: true,
-                lengthChange: true,
-                searching: true,
-                ordering: true,
-                info: true,
-                autoWidth: false,
-                responsive: true,
-                pagingType: "full_numbers",
-
-                lengthMenu: [
-                    [25, 50, 100, 500, -1],
-                    [25, 50, 100, 500, "Todo"]
-                ],
-
-                // Orden inicial por nombre ASC
+                paging: true, lengthChange: true, searching: true,
+                ordering: true, info: true, autoWidth: false,
+                responsive: true, pagingType: "full_numbers",
+                lengthMenu: [[25, 50, 100, 500, -1], [25, 50, 100, 500, "Todo"]],
                 order: [[1, "asc"]],
-
-                // Deshabilitar ordenar solo en Opciones
-                columnDefs: [
-                    {
-                        orderable: false,
-                        targets: 9
-                    }
-                ],
-
+                columnDefs: [{ orderable: false, targets: 9 }],
                 language: {
-                    sProcessing: "Procesando...",
-                    sLengthMenu: "Mostrar _MENU_ registros",
-                    sZeroRecords: "No se encontraron resultados",
-                    sEmptyTable: "Ningún dato disponible",
+                    sProcessing: "Procesando...", sLengthMenu: "Mostrar _MENU_ registros",
+                    sZeroRecords: "No se encontraron resultados", sEmptyTable: "Ningún dato disponible",
                     sInfo: "Mostrando del _START_ al _END_ de _TOTAL_ registros",
-                    sInfoEmpty: "Mostrando 0 registros",
-                    sInfoFiltered: "(filtrado de _MAX_ registros)",
-                    sSearch: "Buscar:",
-                    sLoadingRecords: "Cargando...",
-                    oPaginate: {
-                        sFirst: "Primero",
-                        sLast: "Último",
-                        sNext: "Siguiente",
-                        sPrevious: "Anterior"
-                    },
-                    oAria: {
-                        sSortAscending: ": activar para ordenar ascendente",
-                        sSortDescending: ": activar para ordenar descendente"
-                    }
+                    sInfoEmpty: "Mostrando 0 registros", sInfoFiltered: "(filtrado de _MAX_ registros)",
+                    sSearch: "Buscar:", sLoadingRecords: "Cargando...",
+                    oPaginate: { sFirst: "Primero", sLast: "Último", sNext: "Siguiente", sPrevious: "Anterior" },
+                    oAria: { sSortAscending: ": activar para ordenar ascendente", sSortDescending: ": activar para ordenar descendente" }
                 },
-
-                dom:
-                    "<'row align-items-center'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6 text-md-right'f>>" +
-                    "tr" +
-                    "<'row align-items-center'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
-
+                dom: "<'row align-items-center'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6 text-md-right'f>>tr<'row align-items-center'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
                 initComplete: function () {
-                    $('#tabla thead th').css({
-                        'cursor': 'pointer',
-                        'user-select': 'none'
-                    });
+                    $('#tabla thead th').css({ 'cursor': 'pointer', 'user-select': 'none' });
                 }
             });
         }
 
-
-
+        // ── Recargar tabla ───────────────────────────────────────────────────────
         function recargarTabla() {
             if ($.fn.DataTable.isDataTable('#tabla')) {
                 $('#tabla').DataTable().destroy();
             }
-
             axios.get(urlTabla)
                 .then(function(res) {
                     $('#tabla').find('tbody').remove();
                     $('#tabla').append(res.data);
                     iniciarDataTable();
-
-                    // actualizar stats
                     var total = 0, ok = 0, low = 0, zero = 0;
                     $('#tabla tbody tr').each(function() {
                         var stock = parseInt($(this).data('stock')) || 0;
                         total++;
-                        if (stock >= 5)            ok++;
-                        else if (stock >= 1)       low++;
-                        else                       zero++;
+                        if (stock >= 5) ok++; else if (stock >= 1) low++; else zero++;
                     });
-                    $('#stat-total').text(total);
-                    $('#stat-ok').text(ok);
-                    $('#stat-low').text(low);
-                    $('#stat-zero').text(zero);
-                    $('#filtro-total').text(total);
-                    $('#filtro-info').hide();
+                    $('#stat-total').text(total); $('#stat-ok').text(ok);
+                    $('#stat-low').text(low);     $('#stat-zero').text(zero);
+                    $('#filtro-total').text(total); $('#filtro-info').hide();
                 })
-                .catch(function() {
-                    toastr.error('Error al recargar la tabla');
-                });
+                .catch(function() { toastr.error('Error al recargar la tabla'); });
         }
 
+        // ── Document Ready ───────────────────────────────────────────────────────
         $(document).ready(function () {
             window.seguroBuscador      = true;
             window.txtContenedorGlobal = document;
+
+            // Con _enforceFocus desactivado solo hace falta enfocar el search una vez
+            $(document).on('select2:open', function () {
+                var field = document.querySelector('.select2-container--open .select2-search__field');
+                if (field) field.focus();
+            });
 
             $(document).click(function () { $(".droplista").hide(); });
 
             iniciarDataTable();
 
-            ['select-unidad-nuevo','select-marca-nuevo','select-normativa-nuevo',
-                'select-color-nuevo','select-talla-nuevo','select-objeto-nuevo',       // ← nuevo
+            [
+                'select-unidad-nuevo', 'select-marca-nuevo', 'select-normativa-nuevo',
+                'select-color-nuevo',  'select-talla-nuevo', 'select-objeto-nuevo',
                 'select-unidad-editar','select-marca-editar','select-normativa-editar',
-                'select-color-editar','select-talla-editar','select-objeto-editar'     // ← nuevo
+                'select-color-editar', 'select-talla-editar','select-objeto-editar'
             ].forEach(initSelect2);
         });
 
-        // ── Filtros ──────────────────────────────────────────────────────────
+        // ── Filtros ──────────────────────────────────────────────────────────────
         function aplicarFiltros() {
             var marca     = $('#filtro-marca').val().toLowerCase();
             var unidad    = $('#filtro-unidad').val().toLowerCase();
@@ -681,8 +704,8 @@
                 var tds      = $(this).find('td');
                 var cod      = tds.eq(0).text().toLowerCase();
                 var nom      = tds.eq(1).text().toLowerCase();
-                var med      = $(this).data('unidad') || '';
-                var mar      = $(this).data('marca') || '';
+                var med      = $(this).data('unidad')    || '';
+                var mar      = $(this).data('marca')     || '';
                 var nor      = $(this).data('normativa') || '';
                 var stock    = parseInt($(this).data('stock')) || 0;
                 var meses    = parseInt($(this).data('meses')) || 0;
@@ -707,12 +730,8 @@
             });
 
             var hayFiltro = marca || unidad || normativa || stockF || vencF || texto;
-            if (hayFiltro) {
-                $('#filtro-visible').text(visible);
-                $('#filtro-info').show();
-            } else {
-                $('#filtro-info').hide();
-            }
+            if (hayFiltro) { $('#filtro-visible').text(visible); $('#filtro-info').show(); }
+            else           { $('#filtro-info').hide(); }
         }
 
         function limpiarFiltros() {
@@ -722,18 +741,19 @@
             $('#filtro-info').hide();
         }
 
-        // ── Modal Agregar ────────────────────────────────────────────────────
+        // ── Modal Agregar ────────────────────────────────────────────────────────
         function modalAgregar() {
             document.getElementById("formulario-nuevo").reset();
-            ['select-unidad-nuevo','select-marca-nuevo','select-normativa-nuevo',
-                'select-color-nuevo','select-talla-nuevo','select-objeto-nuevo'    // ← nuevo
+            [
+                'select-unidad-nuevo', 'select-marca-nuevo', 'select-normativa-nuevo',
+                'select-color-nuevo',  'select-talla-nuevo', 'select-objeto-nuevo'
             ].forEach(function (id) {
                 $('#' + id).prop('selectedIndex', 0).trigger('change');
             });
             $('#modalAgregar').modal({ backdrop: 'static', keyboard: false });
         }
 
-        // ── Nuevo ────────────────────────────────────────────────────────────
+        // ── Nuevo ────────────────────────────────────────────────────────────────
         function nuevo() {
             var nombre      = document.getElementById('repuesto').value.trim();
             var codigo      = document.getElementById('codigo-nuevo').value.trim();
@@ -746,11 +766,11 @@
             var otros       = document.getElementById('otros-nuevo').value.trim();
             var fechaCambio = document.getElementById('fechacambio-nuevo').value;
 
-            if (!nombre)    { toastr.error('El nombre es requerido');           return; }
-            if (!unidad)    { toastr.error('La Unidad de Medida es requerida'); return; }
-            if (!marca)     { toastr.error('La Marca es requerida');            return; }
-            if (!normativa) { toastr.error('La Normativa es requerida');        return; }
-            if (!objeto)    { toastr.error('El Código Presupuestario es requerido');     return; }  // ← nuevo
+            if (!nombre)    { toastr.error('El nombre es requerido');                return; }
+            if (!unidad)    { toastr.error('La Unidad de Medida es requerida');      return; }
+            if (!marca)     { toastr.error('La Marca es requerida');                 return; }
+            if (!normativa) { toastr.error('La Normativa es requerida');             return; }
+            if (!objeto)    { toastr.error('El Código Presupuestario es requerido'); return; }
 
             var reglaEntero = /^[0-9]\d*$/;
             if (fechaCambio !== '') {
@@ -760,12 +780,11 @@
 
             openLoading();
             var fd = new FormData();
-            fd.append('nombre', nombre);   fd.append('codigo', codigo);
-            fd.append('unidad', unidad);   fd.append('marca', marca);
+            fd.append('nombre', nombre);       fd.append('codigo', codigo);
+            fd.append('unidad', unidad);       fd.append('marca', marca);
             fd.append('normativa', normativa); fd.append('color', color);
-            fd.append('talla', talla);     fd.append('otros', otros);
-            fd.append('fecha', fechaCambio);
-            fd.append('objeto_especifico', objeto);
+            fd.append('talla', talla);         fd.append('otros', otros);
+            fd.append('fecha', fechaCambio);   fd.append('objeto_especifico', objeto);
 
             axios.post(urlAdmin + '/admin/materiales/nuevo', fd)
                 .then(res => {
@@ -779,7 +798,7 @@
                 .catch(() => { toastr.error('Error al registrar'); closeLoading(); });
         }
 
-        // ── Información ──────────────────────────────────────────────────────
+        // ── Información ──────────────────────────────────────────────────────────
         function informacion(id) {
             openLoading();
             document.getElementById("formulario-editar").reset();
@@ -797,12 +816,10 @@
                     $('#otros-editar').val(d.material.otros);
                     $('#fechacambio-editar').val(d.material.meses_cambio);
 
-                    // Limpiar todos los selects
-                    ['select-unidad-editar','select-marca-editar','select-normativa-editar',
-                        'select-color-editar','select-talla-editar','select-objeto-editar'
-                    ].forEach(function (sid) {
-                        document.getElementById(sid).options.length = 0;
-                    });
+                    [
+                        'select-unidad-editar', 'select-marca-editar', 'select-normativa-editar',
+                        'select-color-editar',  'select-talla-editar', 'select-objeto-editar'
+                    ].forEach(function (sid) { $('#' + sid).empty(); });
 
                     function poblarSelect(selectId, array, valorActual, conVacio) {
                         if (conVacio) $('#' + selectId).append('<option value="">Seleccionar opción</option>');
@@ -819,7 +836,6 @@
                     poblarSelect('select-color-editar',     d.color,     d.material.id_color,     true);
                     poblarSelect('select-talla-editar',     d.talla,     d.material.id_talla,     true);
 
-                    // objeto_especifico se muestra como "codigo — nombre", no usa poblarSelect genérico
                     $.each(d.objeto_especifico, function (k, v) {
                         var sel = (d.material.id_objespecifico == v.id) ? ' selected="selected"' : '';
                         $('#select-objeto-editar').append(
@@ -831,7 +847,7 @@
                 .catch(() => { closeLoading(); toastr.error('Información no encontrada'); });
         }
 
-        // ── Editar ───────────────────────────────────────────────────────────
+        // ── Editar ───────────────────────────────────────────────────────────────
         function editar() {
             var id          = document.getElementById('id-editar').value;
             var nombre      = document.getElementById('nombre-editar').value.trim();
@@ -845,11 +861,11 @@
             var otros       = document.getElementById('otros-editar').value.trim();
             var fechaCambio = document.getElementById('fechacambio-editar').value;
 
-            if (!nombre)    { toastr.error('El nombre es requerido');           return; }
-            if (!unidad)    { toastr.error('La Unidad de Medida es requerida'); return; }
-            if (!marca)     { toastr.error('La Marca es requerida');            return; }
-            if (!normativa) { toastr.error('La Normativa es requerida');        return; }
-            if (!objeto)    { toastr.error('El Código Presupuestario es requerido'); return; }  // ← nuevo
+            if (!nombre)    { toastr.error('El nombre es requerido');                return; }
+            if (!unidad)    { toastr.error('La Unidad de Medida es requerida');      return; }
+            if (!marca)     { toastr.error('La Marca es requerida');                 return; }
+            if (!normativa) { toastr.error('La Normativa es requerida');             return; }
+            if (!objeto)    { toastr.error('El Código Presupuestario es requerido'); return; }
 
             var reglaEntero = /^[0-9]\d*$/;
             if (fechaCambio !== '') {
@@ -878,12 +894,12 @@
                 .catch(() => { toastr.error('Error al actualizar'); closeLoading(); });
         }
 
-        // ── Detalle ──────────────────────────────────────────────────────────
+        // ── Detalle ──────────────────────────────────────────────────────────────
         function infoDetalle(id) {
             window.location.href = "{{ url('/admin/material/detalle') }}/" + id;
         }
 
-        // ── Buscador autocomplete ────────────────────────────────────────────
+        // ── Buscador autocomplete ─────────────────────────────────────────────────
         function buscarMaterial(e) {
             if (!seguroBuscador) return;
             seguroBuscador = false;

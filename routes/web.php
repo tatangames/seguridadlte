@@ -190,7 +190,7 @@ Route::middleware('auth:admin')->group(function () {
 
     // --- HISTORIAL / SALIDAS ---
     Route::get('/admin/historial/salidas', [HistorialSalidasController::class,'indexHistorialSalidas'])->name('admin.historial.salidas.index');
-    Route::get('/admin/historial/salidas/tabla',  [HistorialSalidasController::class,'tablaHistorialSalidas']);
+    Route::post('/admin/historial/salidas/tabla',  [HistorialSalidasController::class,'tablaHistorialSalidas']);
     Route::post('/admin/historial/salidas/informacion', [HistorialSalidasController::class, 'informacionSalida']);
     Route::post('/admin/historial/salidas/editar',      [HistorialSalidasController::class, 'editarSalida']);
     Route::post('/admin/historial/salidas/eliminar',    [HistorialSalidasController::class, 'eliminarSalida']);
@@ -199,12 +199,16 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('/admin/historial/salidas/extras/guardar',  [HistorialSalidasController::class, 'guardarExtrasSalida']);
     Route::post('/admin/historial/salidas/detalle/eliminar', [HistorialSalidasController::class, 'eliminarItemDetalleSalida']);
 
-    // --- REPORTE / ENTRADA POR PROYECTO
+
+
+
+
+
     Route::get('/admin/reporte/inventario/quehaentrado/proyecto', [ReportesController::class,'vistaReporteGenerales'])->name('admin.reportes.index');
     Route::post('/admin/empleados/buscarunidad-empleado/reporte', [ReportesController::class,'buscarUnidadConDistritoEmpleadoReporte']);
     Route::get('/admin/reportes/pdf/recibe-separados/{id}', [ReportesController::class,'reporteEmpleadoRecibidos']);
     Route::get('/admin/existencia/pdf/generar', [ReportesController::class,'reportePdfExistencias']);
-
+    Route::get('/admin/bodega/reportespdf/inicial/final/{desde}/{hasta}', [ReportesController::class, 'reportePDFInicialPorPeriodos']);
 
 
 
