@@ -33,6 +33,11 @@
                                             <i class="fas fa-list"></i> Detalle
                                         </button>
                                         <button type="button" style="margin:2px"
+                                                class="btn btn-secondary btn-xs"
+                                                onclick="window.open('{{ url('/admin/salidas/pdfcompleto') }}/' + {{ $dato->id }}, '_blank')">
+                                            <i class="fas fa-file-pdf"></i> PDF
+                                        </button>
+                                        <button type="button" style="margin:2px"
                                                 class="btn btn-warning btn-xs"
                                                 onclick="modalEditar({{ $dato->id }})">
                                             <i class="fas fa-edit"></i> Editar
