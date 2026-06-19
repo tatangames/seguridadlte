@@ -134,6 +134,7 @@ class RegistrosController extends Controller
             $registro->descripcion  = $request->observacion;
             $registro->lote         = $request->lote;
             $registro->id_proveedor = $request->proveedor;
+            $registro->id_bodega = 2; // siempre bodega #2
             $registro->save();
 
             // ── Detalle ──

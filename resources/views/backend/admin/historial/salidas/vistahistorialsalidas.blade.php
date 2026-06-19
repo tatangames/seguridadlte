@@ -139,7 +139,7 @@
         </section>
     </div>
 
-    {{-- Modal Editar Salida --}}
+    {{-- ══ MODAL EDITAR SALIDA ══ --}}
     <div class="modal fade" id="modalEditar" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
@@ -152,17 +152,19 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form id="formulario-editar">
-                        <input type="hidden" id="id-editar">
 
+                    <input type="hidden" id="id-editar">
 
+                    <div class="row">
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label>Fecha <span class="text-danger">*</span></label>
                                 <input type="date" id="fecha-editar" class="form-control">
                             </div>
                         </div>
+                    </div>
 
+                    <div class="row">
                         <div class="col-md-12">
                             <div class="form-group">
                                 <label>Distrito <span class="text-danger">*</span></label>
@@ -174,6 +176,9 @@
                                 </select>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="row">
                         <div class="col-md-12">
                             <div class="form-group">
                                 <label>Unidad <span class="text-danger">*</span></label>
@@ -182,49 +187,57 @@
                                 </select>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <label>Empleado <span class="text-danger">*</span></label>
-                                    <select id="select-empleado-editar" class="form-control" style="width:100%">
-                                        <option value="">— Seleccionar unidad primero —</option>
-                                    </select>
-                                </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Empleado <span class="text-danger">*</span></label>
+                                <select id="select-empleado-editar" class="form-control" style="width:100%">
+                                    <option value="">— Seleccionar unidad primero —</option>
+                                </select>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Jefe Firma</label>
-                                    <input type="text" id="jefe-firma-editar" class="form-control" maxlength="100" placeholder="Nombre en firma">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Cargo Firma</label>
-                                    <input type="text" id="cargo-firma-editar" class="form-control" maxlength="100" placeholder="Cargo en firma">
-                                </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Jefe Firma</label>
+                                <input type="text" id="jefe-firma-editar" class="form-control"
+                                       maxlength="100" placeholder="Nombre en firma">
                             </div>
                         </div>
-
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <label>Material Línea</label>
-                                    <input type="text" id="material-linea-editar" class="form-control" maxlength="400" placeholder="Material línea">
-                                </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Cargo Firma</label>
+                                <input type="text" id="cargo-firma-editar" class="form-control"
+                                       maxlength="100" placeholder="Cargo en firma">
                             </div>
                         </div>
+                    </div>
 
-                        <div class="form-group">
-                            <label>Descripción</label>
-                            <textarea id="descripcion-editar" class="form-control"
-                                      rows="3" maxlength="800"
-                                      placeholder="Descripción opcional"></textarea>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Material Línea</label>
+                                <input type="text" id="material-linea-editar" class="form-control"
+                                       maxlength="400" placeholder="Material línea">
+                            </div>
                         </div>
-                    </form>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Descripción</label>
+                                <textarea id="descripcion-editar" class="form-control"
+                                          rows="3" maxlength="800"
+                                          placeholder="Descripción opcional"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
@@ -236,7 +249,7 @@
         </div>
     </div>
 
-    {{-- Modal Detalle Salida --}}
+    {{-- ══ MODAL DETALLE SALIDA ══ --}}
     <div class="modal fade" id="modalDetalle" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
@@ -290,11 +303,10 @@
 
     <script>
 
-        // ID de la salida actualmente abierta en el modal detalle
         var detalleIdSalidaActual = null;
 
         // ════════════════════════════════════════════════════════════
-        // SELECT2 — MODAL EDITAR
+        // SELECT2 — opciones
         // ════════════════════════════════════════════════════════════
         function s2optsEditar() {
             return {
@@ -305,16 +317,6 @@
             };
         }
 
-        function initSelect2Editar(selector) {
-            if ($(selector).hasClass('select2-hidden-accessible')) {
-                $(selector).select2('destroy');
-            }
-            $(selector).select2(s2optsEditar());
-        }
-
-        // ════════════════════════════════════════════════════════════
-        // SELECT2 — PANEL DE FILTROS
-        // ════════════════════════════════════════════════════════════
         function s2optsFiltro() {
             return {
                 theme: 'bootstrap-5',
@@ -323,118 +325,283 @@
             };
         }
 
-        function initSelect2Filtro(selector) {
+        // ── Inicializa (o re-inicializa) un select2 ──────────────────
+        function initS2(selector, opts) {
             if ($(selector).hasClass('select2-hidden-accessible')) {
                 $(selector).select2('destroy');
             }
-            $(selector).select2(s2optsFiltro());
+            $(selector).select2(opts);
         }
 
+        // ── Resetea un select y lo re-inicializa ─────────────────────
+        function resetSelect(selector, placeholder, disabled, opts) {
+            if ($(selector).hasClass('select2-hidden-accessible')) {
+                $(selector).select2('destroy');
+            }
+            $(selector)
+                .empty()
+                .append('<option value="">' + placeholder + '</option>')
+                .prop('disabled', disabled);
+            $(selector).select2(opts);
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // DOCUMENT READY
+        // ════════════════════════════════════════════════════════════
         $(function () {
 
-            // Inicializar selects del panel de filtros
-            initSelect2Filtro('#select-distrito-filtro');
-            initSelect2Filtro('#select-unidad-filtro');
-            initSelect2Filtro('#select-empleado-filtro');
+            // Panel de filtros
+            initS2('#select-distrito-filtro', s2optsFiltro());
+            initS2('#select-unidad-filtro',   s2optsFiltro());
+            initS2('#select-empleado-filtro', s2optsFiltro());
 
-            // ── Cascada panel filtros: distrito -> unidad ──
+            // Modal editar
+            initS2('#select-distrito-editar', s2optsEditar());
+            initS2('#select-unidad-editar',   s2optsEditar());
+            initS2('#select-empleado-editar', s2optsEditar());
+
+            // ── Cascada filtros: distrito -> unidad ──────────────────
             $('#select-distrito-filtro').on('change', function () {
-                const idDistrito = $(this).val();
-
-                // Reset unidad y empleado
-                if ($('#select-unidad-filtro').hasClass('select2-hidden-accessible')) {
-                    $('#select-unidad-filtro').select2('destroy');
-                }
-                if ($('#select-empleado-filtro').hasClass('select2-hidden-accessible')) {
-                    $('#select-empleado-filtro').select2('destroy');
-                }
-
-                if (!idDistrito) {
-                    $('#select-unidad-filtro').empty()
-                        .append('<option value="">— Seleccionar distrito primero —</option>')
-                        .prop('disabled', true);
-                    $('#select-empleado-filtro').empty()
-                        .append('<option value="">— Seleccionar unidad primero —</option>')
-                        .prop('disabled', true);
-                    initSelect2Filtro('#select-unidad-filtro');
-                    initSelect2Filtro('#select-empleado-filtro');
-                    return;
-                }
-
-                $('#select-empleado-filtro').empty()
-                    .append('<option value="">— Seleccionar unidad primero —</option>')
-                    .prop('disabled', true);
-                initSelect2Filtro('#select-empleado-filtro');
+                var idDistrito = $(this).val();
+                resetSelect('#select-unidad-filtro',   '— Seleccionar distrito primero —', true,  s2optsFiltro());
+                resetSelect('#select-empleado-filtro', '— Seleccionar unidad primero —',   true,  s2optsFiltro());
+                if (!idDistrito) return;
 
                 openLoading();
                 axios.post(urlAdmin + '/admin/empleados/buscarunidad', { id: idDistrito })
-                    .then((response) => {
+                    .then(function (r) {
                         closeLoading();
-                        if (response.data.success === 1) {
-                            $('#select-unidad-filtro').empty()
-                                .append('<option value="">— Todas —</option>');
-
-                            response.data.arrayUnidad.forEach(v => {
-                                $('#select-unidad-filtro').append(
-                                    `<option value="${v.id}">${v.nombre}</option>`
-                                );
+                        if (r.data.success === 1) {
+                            var $s = $('#select-unidad-filtro');
+                            $s.empty().append('<option value="">— Todas —</option>');
+                            r.data.arrayUnidad.forEach(function (v) {
+                                $s.append('<option value="' + v.id + '">' + v.nombre + '</option>');
                             });
-                            $('#select-unidad-filtro').prop('disabled', false);
-                            initSelect2Filtro('#select-unidad-filtro');
-                        } else {
-                            toastr.error('No se encontraron unidades');
-                        }
+                            $s.prop('disabled', false);
+                            initS2('#select-unidad-filtro', s2optsFiltro());
+                        } else { toastr.error('No se encontraron unidades'); }
                     })
-                    .catch(() => { closeLoading(); toastr.error('Error al cargar unidades'); });
+                    .catch(function () { closeLoading(); toastr.error('Error al cargar unidades'); });
             });
 
-            // ── Cascada panel filtros: unidad -> empleado ──
+            // ── Cascada filtros: unidad -> empleado ──────────────────
             $('#select-unidad-filtro').on('change', function () {
-                const idUnidad = $(this).val();
-
-                if ($('#select-empleado-filtro').hasClass('select2-hidden-accessible')) {
-                    $('#select-empleado-filtro').select2('destroy');
-                }
-
-                if (!idUnidad) {
-                    $('#select-empleado-filtro').empty()
-                        .append('<option value="">— Seleccionar unidad primero —</option>')
-                        .prop('disabled', true);
-                    initSelect2Filtro('#select-empleado-filtro');
-                    return;
-                }
+                var idUnidad = $(this).val();
+                resetSelect('#select-empleado-filtro', '— Seleccionar unidad primero —', true, s2optsFiltro());
+                if (!idUnidad) return;
 
                 openLoading();
                 axios.post(urlAdmin + '/admin/empleados/buscarunidad-empleado/reporte', { id: idUnidad })
-                    .then((response) => {
+                    .then(function (r) {
                         closeLoading();
-                        if (response.data.success === 1) {
-                            $('#select-empleado-filtro').empty()
-                                .append('<option value="">— Todos —</option>');
-
-                            response.data.arrayEmpleados.forEach(v => {
-                                $('#select-empleado-filtro').append(
-                                    `<option value="${v.id}">${v.nombreCompleto}</option>`
-                                );
+                        if (r.data.success === 1) {
+                            var $s = $('#select-empleado-filtro');
+                            $s.empty().append('<option value="">— Todos —</option>');
+                            r.data.arrayEmpleados.forEach(function (v) {
+                                $s.append('<option value="' + v.id + '">' + v.nombreCompleto + '</option>');
                             });
-                            $('#select-empleado-filtro').prop('disabled', false);
-                            initSelect2Filtro('#select-empleado-filtro');
-                        } else {
-                            toastr.error('No se encontraron empleados');
-                        }
+                            $s.prop('disabled', false);
+                            initS2('#select-empleado-filtro', s2optsFiltro());
+                        } else { toastr.error('No se encontraron empleados'); }
                     })
-                    .catch(() => { closeLoading(); toastr.error('Error al cargar empleados'); });
+                    .catch(function () { closeLoading(); toastr.error('Error al cargar empleados'); });
             });
 
-            // ── Bindings de cascada dentro del modal editar ──
-            $('#select-distrito-editar').on('change', function () {
-                buscarUnidadEditar();
+            // ── Cascada modal editar: distrito -> unidad (manual) ────
+            // Solo se dispara cuando el USUARIO cambia el distrito
+            $('#select-distrito-editar').on('select2:select select2:unselect', function () {
+                buscarUnidadEditar(null, null, false);
             });
 
-            $('#select-unidad-editar').on('change', function () {
-                buscarEmpleadoEditar();
+            // ── Cascada modal editar: unidad -> empleado (manual) ────
+            $('#select-unidad-editar').on('select2:select select2:unselect', function () {
+                buscarEmpleadoEditar(null, false);
+            });
+
+            // ── Limpiar modal al cerrar ───────────────────────────────
+            $('#modalEditar').on('hidden.bs.modal', function () {
+                limpiarCamposEditar();
             });
         });
+
+        // ════════════════════════════════════════════════════════════
+        // HELPERS MODAL EDITAR
+        // ════════════════════════════════════════════════════════════
+        function limpiarCamposEditar() {
+            $('#id-editar').val('');
+            $('#fecha-editar').val('');
+            $('#descripcion-editar').val('');
+            $('#jefe-firma-editar').val('');
+            $('#cargo-firma-editar').val('');
+            $('#material-linea-editar').val('');
+
+            // Distrito: NO vaciar opciones, solo limpiar selección
+            $('#select-distrito-editar').val('').trigger('change.select2');
+
+            // Unidad y empleado: estos sí se vacían porque se cargan dinámicamente
+            resetSelect('#select-unidad-editar',   '— Seleccionar distrito primero —', false, s2optsEditar());
+            resetSelect('#select-empleado-editar', '— Seleccionar unidad primero —',   false, s2optsEditar());
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // CASCADA MODAL EDITAR
+        // ════════════════════════════════════════════════════════════
+        function buscarUnidadEditar(idUnidadPre, idEmpleadoPre, silencioso) {
+            var idDistrito = $('#select-distrito-editar').val();
+
+            if (!idDistrito) {
+                resetSelect('#select-unidad-editar',   '— Seleccionar distrito primero —', false, s2optsEditar());
+                resetSelect('#select-empleado-editar', '— Seleccionar unidad primero —',   false, s2optsEditar());
+                if (silencioso) closeLoading();
+                return;
+            }
+
+            if (!silencioso) openLoading();
+
+            axios.post(urlAdmin + '/admin/empleados/buscarunidad', { id: idDistrito })
+                .then(function (r) {
+                    if (r.data.success === 1) {
+                        var $s = $('#select-unidad-editar');
+                        if ($s.hasClass('select2-hidden-accessible')) $s.select2('destroy');
+                        $s.empty().append('<option value="">— Seleccionar unidad —</option>');
+                        r.data.arrayUnidad.forEach(function (v) {
+                            $s.append('<option value="' + v.id + '">' + v.nombre + '</option>');
+                        });
+                        if (idUnidadPre) $s.val(idUnidadPre);
+                        $s.select2(s2optsEditar());
+
+                        if (idUnidadPre) {
+                            // Continúa la cascada → ella cierra el loading
+                            buscarEmpleadoEditar(idEmpleadoPre, silencioso);
+                        } else {
+                            resetSelect('#select-empleado-editar', '— Seleccionar unidad primero —', false, s2optsEditar());
+                            closeLoading();
+                        }
+                    } else {
+                        toastr.error('No se encontraron unidades');
+                        closeLoading();
+                    }
+                })
+                .catch(function () { closeLoading(); toastr.error('Error al cargar unidades'); });
+        }
+
+        function buscarEmpleadoEditar(idEmpleadoPre, silencioso) {
+            var idUnidad = $('#select-unidad-editar').val();
+
+            if (!idUnidad) {
+                resetSelect('#select-empleado-editar', '— Seleccionar unidad primero —', false, s2optsEditar());
+                closeLoading();
+                return;
+            }
+
+            if (!silencioso) openLoading();
+
+            axios.post(urlAdmin + '/admin/empleados/buscarunidad-empleado/reporte', { id: idUnidad })
+                .then(function (r) {
+                    if (r.data.success === 1) {
+                        var $s = $('#select-empleado-editar');
+                        if ($s.hasClass('select2-hidden-accessible')) $s.select2('destroy');
+                        $s.empty().append('<option value="">— Seleccionar empleado —</option>');
+                        r.data.arrayEmpleados.forEach(function (v) {
+                            $s.append('<option value="' + v.id + '">' + v.nombreCompleto + '</option>');
+                        });
+                        if (idEmpleadoPre) $s.val(idEmpleadoPre);
+                        $s.select2(s2optsEditar());
+                    } else {
+                        toastr.error('No se encontraron empleados');
+                    }
+                    closeLoading(); // ← siempre, fin de la cadena
+                })
+                .catch(function () { closeLoading(); toastr.error('Error al cargar empleados'); });
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // MODAL EDITAR — abrir
+        // ════════════════════════════════════════════════════════════
+        function modalEditar(id) {
+            limpiarCamposEditar();
+            openLoading();
+
+            axios.post(urlAdmin + '/admin/historial/salidas/informacion', { id: id })
+                .then(function (response) {
+                    if (response.data.success === 1) {
+                        var s = response.data.salida;
+
+                        $('#id-editar').val(s.id);
+                        $('#fecha-editar').val(s.fecha ? s.fecha.substring(0, 10) : '');
+                        $('#descripcion-editar').val(s.descripcion      ?? '');
+                        $('#jefe-firma-editar').val(s.jefe_firma         ?? '');
+                        $('#cargo-firma-editar').val(s.cargo_firma       ?? '');
+                        $('#material-linea-editar').val(s.material_linea ?? '');
+
+                        $('#modalEditar').modal('show');
+
+                        if (s.id_distrito) {
+                            // Las opciones de distrito ya están en el DOM (Blade las renderizó)
+                            // Solo seteamos el valor y refrescamos select2
+                            $('#select-distrito-editar').val(s.id_distrito).trigger('change.select2');
+                            // Cascada con preselección
+                            buscarUnidadEditar(s.id_unidad_empleado, s.id_empleado, true);
+                        } else {
+                            closeLoading();
+                        }
+                    } else {
+                        closeLoading();
+                        toastr.error('No se pudo cargar la información');
+                    }
+                })
+                .catch(function () { closeLoading(); toastr.error('Error al obtener información'); });
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // MODAL EDITAR — guardar
+        // ════════════════════════════════════════════════════════════
+        function editar() {
+            var id            = $('#id-editar').val();
+            var fecha         = $('#fecha-editar').val().trim();
+            var idEmpleado    = $('#select-empleado-editar').val();
+            var descripcion   = $('#descripcion-editar').val().trim();
+            var jefeFirma     = $('#jefe-firma-editar').val().trim();
+            var cargoFirma    = $('#cargo-firma-editar').val().trim();
+            var materialLinea = $('#material-linea-editar').val().trim();
+
+            if (!fecha)      { toastr.error('La fecha es requerida');        return; }
+            if (!idEmpleado) { toastr.error('Debe seleccionar un empleado'); return; }
+
+            openLoading();
+            var fd = new FormData();
+            fd.append('id',             id);
+            fd.append('fecha',          fecha);
+            fd.append('id_empleado',    idEmpleado);
+            fd.append('descripcion',    descripcion);
+            fd.append('jefe_firma',     jefeFirma);
+            fd.append('cargo_firma',    cargoFirma);
+            fd.append('material_linea', materialLinea);
+
+            axios.post(urlAdmin + '/admin/historial/salidas/editar', fd)
+                .then(function (response) {
+                    closeLoading();
+                    if (response.data.success === 1) {
+                        toastr.success('Salida actualizada correctamente');
+                        $('#modalEditar').modal('hide');
+                        recargar();
+                    } else if (response.data.success === 2) {
+                        Swal.fire({
+                            title: 'Fecha inválida',
+                            html:  'El material <b>' + response.data.nombre_material + '</b> ' +
+                                'tiene fecha de ingreso <b>' + response.data.fecha_ingreso + '</b>.<br><br>' +
+                                'La fecha de salida (<b>' + response.data.fecha_salida + '</b>) ' +
+                                'no puede ser anterior al ingreso.',
+                            type:  'warning',
+                            confirmButtonColor: '#d33',
+                            confirmButtonText:  'Entendido'
+                        });
+                    } else {
+                        toastr.error('Error al actualizar');
+                    }
+                })
+                .catch(function () { closeLoading(); toastr.error('Error al actualizar'); });
+        }
 
         // ════════════════════════════════════════════════════════════
         // DATATABLE
@@ -444,36 +611,26 @@
                 $('#tabla').DataTable().destroy();
             }
             $('#tabla').DataTable({
-                paging: true,
-                lengthChange: true,
-                searching: true,
-                ordering: true,
-                info: true,
-                autoWidth: false,
-                responsive: true,
-                pagingType: "full_numbers",
+                paging: true, lengthChange: true, searching: true,
+                ordering: true, info: true, autoWidth: false, responsive: true,
+                pagingType: 'full_numbers',
                 order: [[0, 'desc']],
-                lengthMenu: [[50, 100, -1], [50, 100, "Todo"]],
+                lengthMenu: [[50, 100, -1], [50, 100, 'Todo']],
                 language: {
-                    sProcessing:   "Procesando...",
-                    sLengthMenu:   "Mostrar _MENU_ registros",
-                    sZeroRecords:  "No se encontraron resultados",
-                    sEmptyTable:   "Ningún dato disponible en esta tabla",
-                    sInfo:         "Mostrando _START_ a _END_ de _TOTAL_ registros",
-                    sInfoEmpty:    "Mostrando 0 a 0 de 0 registros",
-                    sInfoFiltered: "(filtrado de _MAX_ registros)",
-                    sSearch:       "Buscar:",
-                    oPaginate: {
-                        sFirst: "Primero", sLast: "Último",
-                        sNext: "Siguiente", sPrevious: "Anterior"
-                    }
+                    sProcessing: 'Procesando...', sLengthMenu: 'Mostrar _MENU_ registros',
+                    sZeroRecords: 'No se encontraron resultados',
+                    sEmptyTable: 'Ningún dato disponible en esta tabla',
+                    sInfo: 'Mostrando _START_ a _END_ de _TOTAL_ registros',
+                    sInfoEmpty: 'Mostrando 0 a 0 de 0 registros',
+                    sInfoFiltered: '(filtrado de _MAX_ registros)',
+                    sSearch: 'Buscar:',
+                    oPaginate: { sFirst: 'Primero', sLast: 'Último', sNext: 'Siguiente', sPrevious: 'Anterior' }
                 },
                 columnDefs: [
-                    { targets: 0, orderData: 0 },
+                    { targets: 0,  orderData: 0 },
                     { targets: -1, orderable: false, searchable: false }
                 ],
-                dom:
-                    "<'row align-items-center'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6 text-md-right'f>>" +
+                dom: "<'row align-items-center'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6 text-md-right'f>>" +
                     "tr" +
                     "<'row align-items-center'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"
             });
@@ -481,18 +638,15 @@
             $('#tabla_filter input').addClass('form-control form-control-sm').css('display', 'inline-block');
         }
 
-        // ── Construye los filtros actuales y carga la tabla vía POST ──
+        // ════════════════════════════════════════════════════════════
+        // FILTROS Y TABLA
+        // ════════════════════════════════════════════════════════════
         function cargarTablaConFiltros(filtros) {
-            const ruta = "{{ url('/admin/historial/salidas/tabla') }}";
             openLoading();
-
             $.ajax({
-                url: ruta,
+                url:    "{{ url('/admin/historial/salidas/tabla') }}",
                 method: 'POST',
-                data: {
-                    _token: "{{ csrf_token() }}",
-                    ...filtros
-                },
+                data:   { _token: "{{ csrf_token() }}", ...filtros },
                 success: function (html) {
                     $('#tablaDatatable').html(html);
                     initDataTable();
@@ -504,263 +658,61 @@
             });
         }
 
-        window.recargar = function () {
-            // Recarga manteniendo los filtros que estén actualmente seleccionados
-            buscarConFiltros();
-        };
+        window.recargar = function () { buscarConFiltros(); };
 
-        // ── Click en "Buscar" ──
         function buscarConFiltros() {
-            const filtros = {
-                id_distrito:  $('#select-distrito-filtro').val()  || '',
-                id_unidad:    $('#select-unidad-filtro').val()    || '',
-                id_empleado:  $('#select-empleado-filtro').val()  || '',
-                fecha_desde:  $('#fecha-desde-filtro').val()      || '',
-                fecha_hasta:  $('#fecha-hasta-filtro').val()      || '',
-                buscar_todos: '1'   // ← siempre activo al presionar Buscar
-            };
-
-            // Eliminamos la validación que bloqueaba "Todos"
-            cargarTablaConFiltros(filtros);
+            cargarTablaConFiltros({
+                id_distrito:  $('#select-distrito-filtro').val() || '',
+                id_unidad:    $('#select-unidad-filtro').val()   || '',
+                id_empleado:  $('#select-empleado-filtro').val() || '',
+                fecha_desde:  $('#fecha-desde-filtro').val()     || '',
+                fecha_hasta:  $('#fecha-hasta-filtro').val()     || '',
+                buscar_todos: '1'
+            });
         }
 
-        // ── Click en "Limpiar" ──
         function limpiarFiltros() {
-            if ($('#select-distrito-filtro').hasClass('select2-hidden-accessible')) {
-                $('#select-distrito-filtro').val('').trigger('change');
-            }
+            $('#select-distrito-filtro').val('').trigger('change');
             $('#fecha-desde-filtro').val('');
             $('#fecha-hasta-filtro').val('');
-
-            $('#tablaDatatable').html(`
-                <div class="text-center text-muted py-5">
-                    <i class="fas fa-filter fa-2x mb-2 d-block"></i>
-                    <p>Selecciona al menos un filtro y presiona <b>Buscar</b> para ver resultados.</p>
-                </div>
-            `);
+            $('#tablaDatatable').html(
+                '<div class="text-center text-muted py-5">' +
+                '<i class="fas fa-filter fa-2x mb-2 d-block"></i>' +
+                '<p>Selecciona al menos un filtro y presiona <b>Buscar</b> para ver resultados.</p>' +
+                '</div>'
+            );
         }
 
         // ════════════════════════════════════════════════════════════
-        // CASCADA — MODAL EDITAR (sin cambios respecto al original)
+        // ELIMINAR SALIDA
         // ════════════════════════════════════════════════════════════
-        function buscarUnidadEditar(idUnidadPreseleccionar, idEmpleadoPreseleccionar, silencioso) {
-            const idDistrito = $('#select-distrito-editar').val();
-
-            if (!idDistrito) {
-                if ($('#select-unidad-editar').hasClass('select2-hidden-accessible')) {
-                    $('#select-unidad-editar').select2('destroy');
-                }
-                $('#select-unidad-editar').empty()
-                    .append('<option value="">— Seleccionar distrito primero —</option>');
-                initSelect2Editar('#select-unidad-editar');
-
-                if ($('#select-empleado-editar').hasClass('select2-hidden-accessible')) {
-                    $('#select-empleado-editar').select2('destroy');
-                }
-                $('#select-empleado-editar').empty()
-                    .append('<option value="">— Seleccionar unidad primero —</option>');
-                initSelect2Editar('#select-empleado-editar');
-                return;
-            }
-
-            if (!silencioso) openLoading();
-            axios.post(urlAdmin + '/admin/empleados/buscarunidad', { id: idDistrito })
-                .then((response) => {
-                    if (!silencioso) closeLoading();
-                    if (response.data.success === 1) {
-                        if ($('#select-unidad-editar').hasClass('select2-hidden-accessible')) {
-                            $('#select-unidad-editar').select2('destroy');
-                        }
-                        $('#select-unidad-editar').empty();
-                        $('#select-unidad-editar').append('<option value="">— Seleccionar unidad —</option>');
-
-                        response.data.arrayUnidad.forEach(v => {
-                            $('#select-unidad-editar').append(
-                                `<option value="${v.id}">${v.nombre}</option>`
-                            );
-                        });
-
-                        if (idUnidadPreseleccionar) {
-                            $('#select-unidad-editar').val(idUnidadPreseleccionar);
-                        }
-                        initSelect2Editar('#select-unidad-editar');
-
-                        if (idUnidadPreseleccionar) {
-                            buscarEmpleadoEditar(idEmpleadoPreseleccionar, silencioso);
-                        } else {
-                            if ($('#select-empleado-editar').hasClass('select2-hidden-accessible')) {
-                                $('#select-empleado-editar').select2('destroy');
-                            }
-                            $('#select-empleado-editar').empty()
-                                .append('<option value="">— Seleccionar unidad primero —</option>');
-                            initSelect2Editar('#select-empleado-editar');
-                            if (silencioso) closeLoading();
-                        }
-                    } else {
-                        toastr.error('No se encontraron unidades');
-                        if (silencioso) closeLoading();
-                    }
-                })
-                .catch(() => { closeLoading(); toastr.error('Error al cargar unidades'); });
-        }
-
-        function buscarEmpleadoEditar(idEmpleadoPreseleccionar, silencioso) {
-            const idUnidad = $('#select-unidad-editar').val();
-
-            if (!idUnidad) {
-                if ($('#select-empleado-editar').hasClass('select2-hidden-accessible')) {
-                    $('#select-empleado-editar').select2('destroy');
-                }
-                $('#select-empleado-editar').empty()
-                    .append('<option value="">— Seleccionar unidad primero —</option>');
-                initSelect2Editar('#select-empleado-editar');
-                return;
-            }
-
-            if (!silencioso) openLoading();
-            axios.post(urlAdmin + '/admin/empleados/buscarunidad-empleado/reporte', { id: idUnidad })
-                .then((response) => {
-                    if (!silencioso) closeLoading();
-                    if (response.data.success === 1) {
-                        if ($('#select-empleado-editar').hasClass('select2-hidden-accessible')) {
-                            $('#select-empleado-editar').select2('destroy');
-                        }
-                        $('#select-empleado-editar').empty();
-                        $('#select-empleado-editar').append('<option value="">— Seleccionar empleado —</option>');
-
-                        response.data.arrayEmpleados.forEach(v => {
-                            $('#select-empleado-editar').append(
-                                `<option value="${v.id}">${v.nombreCompleto}</option>`
-                            );
-                        });
-
-                        if (idEmpleadoPreseleccionar) {
-                            $('#select-empleado-editar').val(idEmpleadoPreseleccionar);
-                        }
-                        initSelect2Editar('#select-empleado-editar');
-
-                        if (silencioso) closeLoading();
-                    } else {
-                        toastr.error('No se encontraron empleados');
-                        if (silencioso) closeLoading();
-                    }
-                })
-                .catch(() => { closeLoading(); toastr.error('Error al cargar empleados'); });
-        }
-
-        function modalEditar(id) {
-            openLoading();
-            document.getElementById('formulario-editar').reset();
-
-            axios.post(urlAdmin + '/admin/historial/salidas/informacion', { id: id })
-                .then((response) => {
-                    if (response.data.success === 1) {
-                        const s = response.data.salida;
-                        $('#id-editar').val(s.id);
-                        $('#fecha-editar').val(s.fecha ? s.fecha.substring(0, 10) : '');
-                        $('#descripcion-editar').val(s.descripcion ?? '');
-                        $('#jefe-firma-editar').val(s.jefe_firma ?? '');
-                        $('#cargo-firma-editar').val(s.cargo_firma ?? '');
-                        $('#material-linea-editar').val(s.material_linea ?? '');
-
-                        if ($('#select-distrito-editar').hasClass('select2-hidden-accessible')) {
-                            $('#select-distrito-editar').select2('destroy');
-                        }
-                        initSelect2Editar('#select-distrito-editar');
-
-                        if (s.id_distrito) {
-                            $('#select-distrito-editar').val(s.id_distrito).trigger('change.select2');
-                            buscarUnidadEditar(s.id_unidad_empleado, s.id_empleado, true);
-                        } else {
-                            initSelect2Editar('#select-unidad-editar');
-                            initSelect2Editar('#select-empleado-editar');
-                            closeLoading();
-                        }
-
-                        $('#modalEditar').modal('show');
-                    } else {
-                        closeLoading();
-                        toastr.error('No se pudo cargar la información');
-                    }
-                })
-                .catch(() => { closeLoading(); toastr.error('Error al obtener información'); });
-        }
-
-        function editar() {
-            const id             = $('#id-editar').val();
-            const fecha          = $('#fecha-editar').val().trim();
-            const idEmpleado     = $('#select-empleado-editar').val();
-            const descripcion    = $('#descripcion-editar').val().trim();
-            const jefeFirma      = $('#jefe-firma-editar').val().trim();
-            const cargoFirma     = $('#cargo-firma-editar').val().trim();
-            const materialLinea  = $('#material-linea-editar').val().trim();
-
-            if (!fecha) { toastr.error('La fecha es requerida'); return; }
-            if (!idEmpleado) { toastr.error('Debe seleccionar un empleado'); return; }
-
-            openLoading();
-            const fd = new FormData();
-            fd.append('id',             id);
-            fd.append('fecha',          fecha);
-            fd.append('id_empleado',    idEmpleado);
-            fd.append('descripcion',    descripcion);
-            fd.append('jefe_firma',     jefeFirma);
-            fd.append('cargo_firma',    cargoFirma);
-            fd.append('material_linea', materialLinea);
-
-            axios.post(urlAdmin + '/admin/historial/salidas/editar', fd)
-                .then((response) => {
-                    closeLoading();
-                    if (response.data.success === 1) {
-                        toastr.success('Salida actualizada correctamente');
-                        $('#modalEditar').modal('hide');
-                        recargar();
-                    } else if (response.data.success === 2) {
-                        Swal.fire({
-                            title: 'Fecha inválida',
-                            html: 'El material <b>' + response.data.nombre_material + '</b> ' +
-                                'tiene fecha de ingreso <b>' + response.data.fecha_ingreso + '</b>.<br><br>' +
-                                'La fecha de salida (<b>' + response.data.fecha_salida + '</b>) ' +
-                                'no puede ser anterior al ingreso.',
-                            type: 'warning',
-                            confirmButtonColor: '#d33',
-                            confirmButtonText: 'Entendido'
-                        });
-                    } else {
-                        toastr.error('Error al actualizar');
-                    }
-                })
-                .catch(() => { closeLoading(); toastr.error('Error al actualizar'); });
-        }
-
         function eliminar(id) {
             Swal.fire({
                 title: '¿Eliminar salida?',
-                text: 'Se eliminarán también todos los detalles relacionados. Esta acción no se puede deshacer.',
-                type: 'warning',
+                text:  'Se eliminarán también todos los detalles relacionados. Esta acción no se puede deshacer.',
+                type:  'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
+                confirmButtonColor: '#d33', cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar'
+            }).then(function (result) {
                 if (result.value) {
                     openLoading();
                     axios.post(urlAdmin + '/admin/historial/salidas/eliminar', { id: id })
-                        .then((response) => {
+                        .then(function (r) {
                             closeLoading();
-                            if (response.data.success === 1) {
+                            if (r.data.success === 1) {
                                 toastr.success('Salida eliminada correctamente');
                                 recargar();
-                            } else {
-                                toastr.error('Error al eliminar');
-                            }
+                            } else { toastr.error('Error al eliminar'); }
                         })
-                        .catch(() => { closeLoading(); toastr.error('Error al eliminar'); });
+                        .catch(function () { closeLoading(); toastr.error('Error al eliminar'); });
                 }
             });
         }
 
+        // ════════════════════════════════════════════════════════════
+        // MODAL DETALLE
+        // ════════════════════════════════════════════════════════════
         function verDetalle(id, fecha) {
             detalleIdSalidaActual = id;
             $('#detalle-fecha').text(fecha);
@@ -768,7 +720,6 @@
             $('#detalle-contenido, #detalle-vacio').hide();
             $('#detalle-loading').show();
             $('#modalDetalle').modal('show');
-
             cargarDetalle(id);
         }
 
@@ -778,24 +729,21 @@
             $('#detalle-loading').show();
 
             axios.post(urlAdmin + '/admin/historial/salidas/detalle', { id: id })
-                .then((response) => {
+                .then(function (r) {
                     $('#detalle-loading').hide();
-                    if (response.data.success === 1 && response.data.detalle.length > 0) {
-                        let html = '';
-                        response.data.detalle.forEach((fila, i) => {
-                            html += `<tr>
-                                <td>${i + 1}</td>
-                                <td>${fila.material}</td>
-                                <td class="text-center">${fila.cantidad_salida}</td>
-                                <td class="text-right">$${fila.precio}</td>
-                                <td class="text-center">
-                                    <button type="button"
-                                            class="btn btn-danger btn-xs"
-                                            onclick="confirmarEliminarItem(${fila.id_detalle}, ${response.data.detalle.length})">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>`;
+                    if (r.data.success === 1 && r.data.detalle.length > 0) {
+                        var html = '';
+                        r.data.detalle.forEach(function (fila, i) {
+                            html += '<tr>' +
+                                '<td>' + (i + 1) + '</td>' +
+                                '<td>' + fila.material + '</td>' +
+                                '<td class="text-center">' + fila.cantidad_salida + '</td>' +
+                                '<td class="text-right">$' + fila.precio + '</td>' +
+                                '<td class="text-center">' +
+                                '<button type="button" class="btn btn-danger btn-xs" ' +
+                                'onclick="confirmarEliminarItem(' + fila.id_detalle + ',' + r.data.detalle.length + ')">' +
+                                '<i class="fas fa-trash"></i></button>' +
+                                '</td></tr>';
                         });
                         $('#detalle-tbody').html(html);
                         $('#detalle-contenido').show();
@@ -803,7 +751,7 @@
                         $('#detalle-vacio').show();
                     }
                 })
-                .catch(() => {
+                .catch(function () {
                     $('#detalle-loading').hide();
                     $('#detalle-vacio').show();
                     toastr.error('Error al cargar el detalle');
@@ -811,25 +759,18 @@
         }
 
         function confirmarEliminarItem(idDetalle, totalItems) {
-            var esUltimo  = (totalItems === 1);
-            var titulo    = esUltimo ? '¿Eliminar último ítem?' : '¿Eliminar este ítem?';
-            var texto     = esUltimo
-                ? 'Es el único material registrado. Se eliminará también la salida completa.'
-                : 'Se eliminará este material del detalle de salida.';
-
+            var esUltimo = (totalItems === 1);
             Swal.fire({
-                title: titulo,
-                text: texto,
+                title: esUltimo ? '¿Eliminar último ítem?' : '¿Eliminar este ítem?',
+                text:  esUltimo
+                    ? 'Es el único material registrado. Se eliminará también la salida completa.'
+                    : 'Se eliminará este material del detalle de salida.',
                 type: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.value) {
-                    eliminarItemDetalle(idDetalle, esUltimo);
-                }
+                confirmButtonColor: '#d33', cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar'
+            }).then(function (result) {
+                if (result.value) { eliminarItemDetalle(idDetalle, esUltimo); }
             });
         }
 
@@ -839,9 +780,9 @@
                 id_detalle: idDetalle,
                 id_salida:  detalleIdSalidaActual
             })
-                .then((response) => {
+                .then(function (r) {
                     closeLoading();
-                    if (response.data.success === 1) {
+                    if (r.data.success === 1) {
                         if (esUltimo) {
                             toastr.success('Salida eliminada completamente');
                             $('#modalDetalle').modal('hide');
@@ -851,11 +792,9 @@
                             cargarDetalle(detalleIdSalidaActual);
                             recargar();
                         }
-                    } else {
-                        toastr.error('Error al eliminar el ítem');
-                    }
+                    } else { toastr.error('Error al eliminar el ítem'); }
                 })
-                .catch(() => { closeLoading(); toastr.error('Error al eliminar'); });
+                .catch(function () { closeLoading(); toastr.error('Error al eliminar'); });
         }
 
     </script>

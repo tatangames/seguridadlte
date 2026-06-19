@@ -25,7 +25,7 @@ class HistorialController extends Controller
 
     public function tablaHistorialEntradas(Request $request)
     {
-        $arrayEntradas = Entradas::with('proveedor')
+        $arrayEntradas = Entradas::with(['proveedor', 'bodega'])
             ->orderBy('fecha', 'desc')
             ->get()
             ->map(function ($item) {

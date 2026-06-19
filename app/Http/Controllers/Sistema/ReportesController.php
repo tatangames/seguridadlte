@@ -559,64 +559,65 @@ class ReportesController extends Controller
         $hastaFormat = Carbon::parse($hasta)->format('d/m/Y');
 
         $rows = DB::select("
-        WITH movimientos AS (
-            SELECT
-                ed.id_material,
-                COALESCE(NULLIF(oe.codigo, ''), 'SIN-CODIGO') AS codigo,
-                m.nombre AS descripcion,
-                ed.precio,
-                e.fecha AS fecha_movimiento,
-                ed.cantidad_inicial AS entrada,
-                0 AS salida
-            FROM entradas_detalle ed
-            INNER JOIN entradas e   ON e.id  = ed.id_entradas
-            INNER JOIN materiales m ON m.id  = ed.id_material
-            LEFT  JOIN objeto_especifico oe ON oe.id = m.id_objespecifico
-
-            UNION ALL
-
-            SELECT
-                ed.id_material,
-                COALESCE(NULLIF(oe.codigo, ''), 'SIN-CODIGO') AS codigo,
-                m.nombre AS descripcion,
-                ed.precio,
-                s.fecha AS fecha_movimiento,
-                0 AS entrada,
-                sd.cantidad_salida AS salida
-            FROM salidas_detalle sd
-            INNER JOIN salidas s            ON s.id  = sd.id_salida
-            INNER JOIN entradas_detalle ed  ON ed.id = sd.id_entrada_detalle
-            INNER JOIN materiales m         ON m.id  = ed.id_material
-            LEFT  JOIN objeto_especifico oe ON oe.id = m.id_objespecifico
-        )
+    WITH movimientos AS (
         SELECT
-            id_material, codigo, descripcion,
-            MAX(precio) AS precio,
+            ed.id_material,
+            COALESCE(NULLIF(oe.codigo, ''), 'SIN-CODIGO') AS codigo,
+            m.nombre AS descripcion,
+            ed.precio,
+            e.fecha AS fecha_movimiento,
+            ed.cantidad_inicial AS entrada,
+            0 AS salida
+        FROM entradas_detalle ed
+        INNER JOIN entradas e   ON e.id  = ed.id_entradas AND e.id_bodega = 2
+        INNER JOIN materiales m ON m.id  = ed.id_material
+        LEFT  JOIN objeto_especifico oe ON oe.id = m.id_objespecifico
 
-            SUM(CASE WHEN fecha_movimiento <  ? THEN entrada - salida ELSE 0 END) AS saldo_inicial_cant,
-            SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN entrada ELSE 0 END) AS entradas_mes_cant,
-            SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN salida  ELSE 0 END) AS salidas_mes_cant,
+        UNION ALL
 
-            (
-                SUM(CASE WHEN fecha_movimiento <  ? THEN entrada - salida ELSE 0 END)
-              + SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN entrada ELSE 0 END)
-              - SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN salida  ELSE 0 END)
-            ) AS saldo_final_cant,
+        SELECT
+            ed.id_material,
+            COALESCE(NULLIF(oe.codigo, ''), 'SIN-CODIGO') AS codigo,
+            m.nombre AS descripcion,
+            ed.precio,
+            s.fecha AS fecha_movimiento,
+            0 AS entrada,
+            sd.cantidad_salida AS salida
+        FROM salidas_detalle sd
+        INNER JOIN salidas s            ON s.id  = sd.id_salida
+        INNER JOIN entradas_detalle ed  ON ed.id = sd.id_entrada_detalle
+        INNER JOIN entradas e           ON e.id  = ed.id_entradas AND e.id_bodega = 2
+        INNER JOIN materiales m         ON m.id  = ed.id_material
+        LEFT  JOIN objeto_especifico oe ON oe.id = m.id_objespecifico
+    )
+    SELECT
+        id_material, codigo, descripcion,
+        MAX(precio) AS precio,
 
-            SUM(CASE WHEN fecha_movimiento <  ? THEN entrada - salida ELSE 0 END) * MAX(precio) AS saldo_inicial_money,
-            SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN entrada ELSE 0 END) * MAX(precio) AS entradas_mes_money,
-            SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN salida  ELSE 0 END) * MAX(precio) AS salidas_mes_money,
+        SUM(CASE WHEN fecha_movimiento <  ? THEN entrada - salida ELSE 0 END) AS saldo_inicial_cant,
+        SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN entrada ELSE 0 END) AS entradas_mes_cant,
+        SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN salida  ELSE 0 END) AS salidas_mes_cant,
 
-            (
-                SUM(CASE WHEN fecha_movimiento <  ? THEN entrada - salida ELSE 0 END)
-              + SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN entrada ELSE 0 END)
-              - SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN salida  ELSE 0 END)
-            ) * MAX(precio) AS saldo_final_money
+        (
+            SUM(CASE WHEN fecha_movimiento <  ? THEN entrada - salida ELSE 0 END)
+          + SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN entrada ELSE 0 END)
+          - SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN salida  ELSE 0 END)
+        ) AS saldo_final_cant,
 
-        FROM movimientos
-        GROUP BY id_material, codigo, descripcion
-        ORDER BY codigo, descripcion
-    ", [
+        SUM(CASE WHEN fecha_movimiento <  ? THEN entrada - salida ELSE 0 END) * MAX(precio) AS saldo_inicial_money,
+        SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN entrada ELSE 0 END) * MAX(precio) AS entradas_mes_money,
+        SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN salida  ELSE 0 END) * MAX(precio) AS salidas_mes_money,
+
+        (
+            SUM(CASE WHEN fecha_movimiento <  ? THEN entrada - salida ELSE 0 END)
+          + SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN entrada ELSE 0 END)
+          - SUM(CASE WHEN fecha_movimiento >= ? AND fecha_movimiento <= ? THEN salida  ELSE 0 END)
+        ) * MAX(precio) AS saldo_final_money
+
+            FROM movimientos
+            GROUP BY id_material, codigo, descripcion
+            ORDER BY codigo, descripcion
+        ", [
             $start->toDateString(),
             $start->toDateString(), $end->toDateString(),
             $start->toDateString(), $end->toDateString(),

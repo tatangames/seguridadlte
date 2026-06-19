@@ -12,7 +12,7 @@ class Entradas extends Model
     protected $table = 'entradas';
     public $timestamps = false;
 
-    protected $fillable = ['id_proveedor','fecha', 'descripcion', 'lote'];
+    protected $fillable = ['id_proveedor','fecha', 'descripcion', 'lote', 'id_bodega'];
 
 
     public function proveedor()
@@ -23,5 +23,10 @@ class Entradas extends Model
     public function detalle()
     {
         return $this->hasMany(EntradasDetalle::class, 'id_entradas');
+    }
+
+    public function bodega()
+    {
+        return $this->belongsTo(Bodega::class, 'id_bodega');
     }
 }

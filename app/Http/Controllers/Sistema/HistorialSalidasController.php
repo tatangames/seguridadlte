@@ -70,16 +70,22 @@ class HistorialSalidasController extends Controller
             compact('arraySalidas'));
     }
 
+
     public function informacionSalida(Request $request)
     {
-        $salida = Salidas::with('empleado.unidadEmpleado.distrito', 'empleado.cargo', 'empleado.jefe')
-            ->find($request->id);
+        $salida = Salidas::find($request->id);
 
         if (!$salida) {
             return response()->json(['success' => 0]);
         }
 
-        $empleado = $salida->empleado;
+        // Query directa para evitar dependencia de nombres de relaciones
+        $datos = DB::table('empleado as e')
+            ->join('unidad_empleado as ue', 'ue.id', '=', 'e.id_unidad_empleado')
+            ->join('distrito as d',         'd.id',  '=', 'ue.id_distrito')
+            ->where('e.id', $salida->id_empleado)
+            ->select('e.id as id_empleado', 'ue.id as id_unidad', 'd.id as id_distrito')
+            ->first();
 
         return response()->json([
             'success' => 1,
@@ -87,20 +93,16 @@ class HistorialSalidasController extends Controller
                 'id'                 => $salida->id,
                 'fecha'              => $salida->fecha,
                 'descripcion'        => $salida->descripcion,
-                'cargo'              => $salida->cargo,
-                'colaborador'        => $salida->colaborador,
-                'jefe_inmediato'     => $salida->jefe_inmediato,
                 'jefe_firma'         => $salida->jefe_firma,
                 'cargo_firma'        => $salida->cargo_firma,
                 'material_linea'     => $salida->material_linea,
-
-                // Para precargar la cascada distrito -> unidad -> empleado
-                'id_empleado'        => $empleado->id ?? null,
-                'id_unidad_empleado' => $empleado->unidadEmpleado->id ?? null,
-                'id_distrito'        => $empleado->unidadEmpleado->distrito->id ?? null,
+                'id_empleado'        => $datos->id_empleado ?? null,
+                'id_unidad_empleado' => $datos->id_unidad   ?? null,
+                'id_distrito'        => $datos->id_distrito ?? null,
             ]
         ]);
     }
+
 
     /**
      * Devuelve nombre, cargo y jefe inmediato de un empleado puntual.
@@ -133,12 +135,6 @@ class HistorialSalidasController extends Controller
             return response()->json(['success' => 0]);
         }
 
-        $empleado = Empleado::with('cargo', 'jefe')->find($request->id_empleado);
-
-        if (!$empleado) {
-            return response()->json(['success' => 0]);
-        }
-
         // Validar que la nueva fecha no sea anterior al ingreso de ningún ítem
         $entradaConflicto = DB::table('salidas_detalle as sd')
             ->join('entradas_detalle as ed', 'ed.id', '=', 'sd.id_entrada_detalle')
@@ -160,14 +156,40 @@ class HistorialSalidasController extends Controller
         }
 
         $salida->fecha          = $request->fecha;
-        $salida->id_empleado    = $empleado->id;
         $salida->descripcion    = $request->descripcion    ?: null;
-        $salida->cargo          = $empleado->cargo->nombre ?? null;
-        $salida->colaborador    = $request->colaborador    ?: $empleado->nombre;
-        $salida->jefe_inmediato = $empleado->jefe->nombre  ?? null;
         $salida->jefe_firma     = $request->jefe_firma     ?: null;
         $salida->cargo_firma    = $request->cargo_firma    ?: null;
         $salida->material_linea = $request->material_linea ?: null;
+
+        // Solo actualizar datos del empleado si cambió
+        if ((int)$request->id_empleado !== (int)$salida->id_empleado) {
+
+            $empleadoDatos = DB::table('empleado as e')
+                ->join('unidad_empleado as ue', 'ue.id', '=', 'e.id_unidad_empleado')
+                ->join('cargo as c',            'c.id',  '=', 'e.id_cargo')
+                ->leftJoin('jefe_unidad as ju', 'ju.id_unidad_empleado', '=', 'e.id_unidad_empleado')
+                ->leftJoin('empleado as jefe',  'jefe.id', '=', 'ju.id_empleado')
+                ->where('e.id', $request->id_empleado)
+                ->select(
+                    'e.id',
+                    'e.nombre    as nombre_empleado',
+                    'ue.nombre   as nombre_unidad',
+                    'c.nombre    as nombre_cargo',
+                    'jefe.nombre as nombre_jefe'
+                )
+                ->first();
+
+            if (!$empleadoDatos) {
+                return response()->json(['success' => 0]);
+            }
+
+            $salida->id_empleado    = $empleadoDatos->id;
+            $salida->area           = $empleadoDatos->nombre_unidad;
+            $salida->cargo          = $empleadoDatos->nombre_cargo;
+            $salida->colaborador    = $empleadoDatos->nombre_empleado;
+            $salida->jefe_inmediato = $empleadoDatos->nombre_jefe;
+        }
+
         $salida->save();
 
         return response()->json(['success' => 1]);
