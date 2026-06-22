@@ -16,7 +16,7 @@ return new class extends Migration
 
             // REPORTE PIXELES DISTANCIAS
             $table->integer('px_firmas');
-
+            $table->boolean('salto_pagina')->default(false);
         });
     }
 

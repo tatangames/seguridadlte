@@ -179,6 +179,55 @@
             .reportes-grid { grid-template-columns: 1fr; }
             .reporte-fields .field-row { flex-direction: column; }
         }
+
+
+        /* ── Tarjeta configuración ── */
+        .reporte-card .reporte-header {
+            padding: 18px 22px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: #fff;
+            background: linear-gradient(135deg, #6d28d9, #8b5cf6);
+            border-radius: 0;
+        }
+        .reporte-card .reporte-header h5 {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+        }
+        .reporte-card .reporte-body {
+            padding: 20px 22px;
+        }
+        .btn-pdf.morado {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            color: #fff;
+            background: #7c3aed;
+            transition: background .15s;
+        }
+        .btn-pdf.morado:hover { background: #6d28d9; }
+        .divider { border-color: #e2e8f0; margin: 14px 0; }
+        .field-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+
     </style>
 @stop
 
@@ -271,8 +320,51 @@
                             </button>
                         </div>
                     </div>
-
                 </div>
+
+                {{-- ══ CONFIGURACIÓN: Distancias del Reporte (píxeles) ══ --}}
+                <div class="col-md-6">
+                    <div class="reporte-card">
+                        <div class="reporte-header completado">
+                            <i class="fas fa-sliders-h"></i>
+                            <h5>Configuración de Distancias del Reporte</h5>
+                        </div>
+                        <div class="reporte-body">
+                            <p style="font-size:13px; color:#666; margin-bottom:14px;">
+                                Ajusta el espacio en píxeles para las firmas en los reportes PDF.
+                            </p>
+                            <hr class="divider">
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="field-label">
+                                        <i class="fas fa-signature mr-1"></i>Píxeles Firmas
+                                    </label>
+                                    <input type="number" min="0" class="form-control" id="config-px-firmas"
+                                           value="{{ $infoGeneral->px_firmas ?? 0 }}">
+                                </div>
+
+                                <div class="col-md-6 d-flex align-items-end">
+                                    <div class="custom-control custom-switch mb-1">
+                                        <input type="checkbox" class="custom-control-input" id="config-salto-pagina"
+                                            {{ ($infoGeneral->salto_pagina ?? false) ? 'checked' : '' }}>
+                                        <label class="custom-control-label" for="config-salto-pagina"
+                                               style="font-size:13px; padding-top:2px;">
+                                            Salto de página antes de firma
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <button type="button" onclick="actualizarPxConfig()" class="btn-pdf morado">
+                                    <i class="fas fa-save"></i> Guardar Cambios
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
 
             </div>
         </section>
@@ -373,5 +465,34 @@
                 })
                 .catch(function() { closeLoading(); toastr.error('Error al cargar empleados'); });
         }
+
+
+        function actualizarPxConfig() {
+            var pxFirmas    = parseInt($('#config-px-firmas').val()) || 0;
+            var saltoPagina = $('#config-salto-pagina').is(':checked') ? 1 : 0;
+
+            if (pxFirmas < 0) {
+                toastr.error('El valor no puede ser negativo');
+                return;
+            }
+
+            axios.post("{{ route('admin.informacion.actualizar.px') }}", {
+                _token:       '{{ csrf_token() }}',
+                px_firmas:    pxFirmas,
+                salto_pagina: saltoPagina,
+            })
+                .then(function (response) {
+                    if (response.data.success === 1) {
+                        toastr.success('Configuración actualizada correctamente');
+                    } else {
+                        toastr.error('No se pudo actualizar la configuración');
+                    }
+                })
+                .catch(function () {
+                    toastr.error('Ocurrió un error al guardar');
+                });
+        }
+
+
     </script>
 @endsection

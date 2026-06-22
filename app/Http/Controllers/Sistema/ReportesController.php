@@ -30,8 +30,9 @@ class ReportesController extends Controller
     public function vistaReporteGenerales()
     {
         $arrayDistritos = Distrito::orderBy('nombre')->get(); // ajusta el modelo
+        $infoGeneral = InformacionGeneral::where('id', 1)->first();
 
-        return view('backend.admin.reportes.vistareportegenerales', compact('arrayDistritos'));
+        return view('backend.admin.reportes.vistareportegenerales', compact('arrayDistritos', 'infoGeneral'));
     }
 
 
@@ -897,13 +898,23 @@ class ReportesController extends Controller
 ";
         }
 
-        // ══ FIRMA ═════════════════════════════════════════════════════════════════
+        // ── Config ──────────────────────────────────────────────────────────────
+        $infoGeneral = \App\Models\InformacionGeneral::find(1);
+        $pxFirmas    = (int) ($infoGeneral->px_firmas    ?? 60);
+        $saltoPagina = (bool) ($infoGeneral->salto_pagina ?? false);
+
+        // px → mm (conversión real para mPDF)
+        $margenMm = round($pxFirmas * 0.264583);
+
+        // ══ FIRMA ════════════════════════════════════════════════════════════════
+        if ($saltoPagina) {
+            $html .= '<pagebreak />';
+        }
+
+        // El margen se aplica SIEMPRE (ya sea tras el salto o al final del contenido)
+        $html .= "<div style='height:{$margenMm}mm; line-height:{$margenMm}mm; font-size:1px;'>&nbsp;</div>";
+
         $html .= "
-        <table width='100%' style='border-collapse:collapse;'>
-            <tr>
-                <td style='height:60px;'></td>
-            </tr>
-        </table>
         <table width='100%' style='border-collapse:collapse;'>
             <tr>
                 <td style='text-align:center; font-family:Arial,sans-serif; font-size:13px;'>
@@ -911,7 +922,7 @@ class ReportesController extends Controller
                 </td>
             </tr>
             <tr>
-                <td style='height:6px;'></td>
+                <td style='height:6px; font-size:1px; line-height:6px;'>&nbsp;</td>
             </tr>
             <tr>
                 <td style='text-align:center; font-family:Arial,sans-serif; font-size:12px; font-weight:bold;'>
@@ -924,6 +935,41 @@ class ReportesController extends Controller
         $mpdf->setFooter('Página {PAGENO} de {nb}');
         $mpdf->WriteHTML($html, \Mpdf\HTMLParserMode::HTML_BODY);
         $mpdf->Output();
+    }
+
+
+
+
+
+    public function actualizarPxInformacionGeneral(Request $request)
+    {
+        $rules = [
+            'px_firmas'    => 'required|integer|min:0',
+            'salto_pagina' => 'boolean',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            return ['success' => 0];
+        }
+
+        try {
+            $info = InformacionGeneral::find(1);
+
+            if (!$info) {
+                return ['success' => 0];
+            }
+
+            $info->px_firmas    = (int) $request->px_firmas;
+            $info->salto_pagina = (bool) $request->salto_pagina;
+            $info->save();
+
+            return ['success' => 1];
+
+        } catch (\Throwable $e) {
+            Log::error('actualizarPxInformacionGeneral: ' . $e->getMessage());
+            return ['success' => 99];
+        }
     }
 
 
