@@ -90,8 +90,6 @@ class MaterialesController extends Controller
         $regla = [
             'nombre'          => 'required',
             'unidad'          => 'required',
-            'marca'           => 'required',
-            'normativa'       => 'required',
             'objeto_especifico' => 'required',
         ];
 
@@ -153,8 +151,6 @@ class MaterialesController extends Controller
         $regla = [
             'nombre'            => 'required',
             'unidad'            => 'required',
-            'marca'             => 'required',
-            'normativa'         => 'required',
             'objeto_especifico' => 'required',
         ];
 

@@ -377,7 +377,7 @@
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-group">
-                                            <label class="form-label-styled">Marca <span class="required-star">*</span></label>
+                                            <label class="form-label-styled">Marca </label>
                                             <select class="form-control" id="select-marca-nuevo">
                                                 <option value="">Seleccione una opción</option>
                                                 @foreach($arrayMarcas as $sel)
@@ -388,7 +388,7 @@
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-group">
-                                            <label class="form-label-styled">Normativa <span class="required-star">*</span></label>
+                                            <label class="form-label-styled">Normativa</label>
                                             <select class="form-control" id="select-normativa-nuevo">
                                                 <option value="">Seleccione una opción</option>
                                                 @foreach($arrayNormativa as $sel)
@@ -510,13 +510,13 @@
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-group">
-                                            <label class="form-label-styled">Marca <span class="required-star">*</span></label>
+                                            <label class="form-label-styled">Marca</label>
                                             <select class="form-control" id="select-marca-editar"></select>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-group">
-                                            <label class="form-label-styled">Normativa <span class="required-star">*</span></label>
+                                            <label class="form-label-styled">Normativa</label>
                                             <select class="form-control" id="select-normativa-editar"></select>
                                         </div>
                                     </div>
@@ -768,8 +768,6 @@
 
             if (!nombre)    { toastr.error('El nombre es requerido');                return; }
             if (!unidad)    { toastr.error('La Unidad de Medida es requerida');      return; }
-            if (!marca)     { toastr.error('La Marca es requerida');                 return; }
-            if (!normativa) { toastr.error('La Normativa es requerida');             return; }
             if (!objeto)    { toastr.error('El Código Presupuestario es requerido'); return; }
 
             var reglaEntero = /^[0-9]\d*$/;
@@ -831,8 +829,8 @@
                     }
 
                     poblarSelect('select-unidad-editar',    d.unidad,    d.material.id_medida,    false);
-                    poblarSelect('select-marca-editar',     d.marca,     d.material.id_marca,     false);
-                    poblarSelect('select-normativa-editar', d.normativa, d.material.id_normativa, false);
+                    poblarSelect('select-marca-editar',     d.marca,     d.material.id_marca,     true);   // ← true
+                    poblarSelect('select-normativa-editar', d.normativa, d.material.id_normativa, true);   // ← true
                     poblarSelect('select-color-editar',     d.color,     d.material.id_color,     true);
                     poblarSelect('select-talla-editar',     d.talla,     d.material.id_talla,     true);
 
@@ -863,8 +861,6 @@
 
             if (!nombre)    { toastr.error('El nombre es requerido');                return; }
             if (!unidad)    { toastr.error('La Unidad de Medida es requerida');      return; }
-            if (!marca)     { toastr.error('La Marca es requerida');                 return; }
-            if (!normativa) { toastr.error('La Normativa es requerida');             return; }
             if (!objeto)    { toastr.error('El Código Presupuestario es requerido'); return; }
 
             var reglaEntero = /^[0-9]\d*$/;
