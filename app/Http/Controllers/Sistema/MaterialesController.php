@@ -53,6 +53,7 @@ class MaterialesController extends Controller
             ->leftJoin('normativa as no', 'no.id', '=', 'm.id_normativa')
             ->leftJoin('color as co', 'co.id', '=', 'm.id_color')
             ->leftJoin('talla as ta', 'ta.id', '=', 'm.id_talla')
+            ->leftJoin('objeto_especifico as oe', 'oe.id', '=', 'm.id_objespecifico')
             ->select(
                 'm.*',
                 'um.nombre as unidadMedida',
@@ -60,21 +61,23 @@ class MaterialesController extends Controller
                 'no.nombre as normativa',
                 'co.nombre as color',
                 'ta.nombre as talla',
+                'oe.codigo as oe_codigo',
+                'oe.nombre as oe_nombre',
                 DB::raw('(SELECT COALESCE(SUM(cantidad_inicial),0)
-                  FROM entradas_detalle
-                  WHERE id_material = m.id) as total_ingresado'),
+              FROM entradas_detalle
+              WHERE id_material = m.id) as total_ingresado'),
                 DB::raw('(SELECT COALESCE(SUM(sd.cantidad_salida),0)
-                  FROM salidas_detalle sd
-                  INNER JOIN entradas_detalle ed ON ed.id = sd.id_entrada_detalle
-                  WHERE ed.id_material = m.id) as total_salido'),
+              FROM salidas_detalle sd
+              INNER JOIN entradas_detalle ed ON ed.id = sd.id_entrada_detalle
+              WHERE ed.id_material = m.id) as total_salido'),
                 DB::raw('(
-            (SELECT COALESCE(SUM(cantidad_inicial),0) FROM entradas_detalle WHERE id_material = m.id)
-            -
-            (SELECT COALESCE(SUM(sd.cantidad_salida),0)
-             FROM salidas_detalle sd
-             INNER JOIN entradas_detalle ed ON ed.id = sd.id_entrada_detalle
-             WHERE ed.id_material = m.id)
-        ) as cantidadGlobal')
+        (SELECT COALESCE(SUM(cantidad_inicial),0) FROM entradas_detalle WHERE id_material = m.id)
+        -
+        (SELECT COALESCE(SUM(sd.cantidad_salida),0)
+         FROM salidas_detalle sd
+         INNER JOIN entradas_detalle ed ON ed.id = sd.id_entrada_detalle
+         WHERE ed.id_material = m.id)
+    ) as cantidadGlobal')
             )
             ->get();
     }

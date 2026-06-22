@@ -318,7 +318,7 @@
                                         <th style="width:6%">Talla</th>
                                         <th style="width:10%">Otros</th>
                                         <th style="width:8%">Stock Actual</th>
-                                        <th style="width:8%">Meses Cambio</th>
+                                        <th style="width:8%">Cod. Presup.</th>
                                         <th style="width:11%">Opciones</th>
                                     </tr>
                                     </thead>

@@ -11,18 +11,9 @@
             $stockClass = 'danger';
         }
 
-        $meses = (int) ($dato->meses_cambio ?? 0);
-
-        if ($meses === 0) {
-            $mesesClass = 'sindata';
-            $mesesLabel = '—';
-        } elseif ($meses <= 3) {
-            $mesesClass = 'proximo';
-            $mesesLabel = $meses . ' mes' . ($meses > 1 ? 'es' : '');
-        } else {
-            $mesesClass = 'vigente';
-            $mesesLabel = $meses . ' meses';
-        }
+        $oeLabel = $dato->oe_codigo
+            ? $dato->oe_codigo . ' - ' . $dato->oe_nombre
+            : ($dato->oe_nombre ?? null);
     @endphp
 
     <tr
@@ -30,8 +21,7 @@
         data-unidad="{{ strtolower($dato->unidadMedida ?? '') }}"
         data-normativa="{{ strtolower($dato->normativa ?? '') }}"
         data-stock="{{ $stock }}"
-        data-meses="{{ $meses }}"
-        data-sinfecha="{{ $meses === 0 ? '1' : '0' }}"
+        data-oe="{{ strtolower($oeLabel ?? '') }}"
     >
 
         {{-- Código --}}
@@ -81,12 +71,15 @@
             </span>
         </td>
 
-        {{-- Meses Cambio --}}
-        <td data-order="{{ $meses }}">
-            <span class="meses-badge {{ $mesesClass }}">
-                <i class="fas fa-clock" style="font-size:10px"></i>
-                {{ $mesesLabel }}
-            </span>
+        {{-- Objeto Específico --}}
+        <td data-order="{{ $oeLabel ?? '' }}">
+            @if($oeLabel)
+                <span class="badge badge-success" style="font-size:11px; font-weight:600; letter-spacing:.3px;">
+            {{ $oeLabel }}
+        </span>
+            @else
+                <span style="color:#cbd5e1">—</span>
+            @endif
         </td>
 
         {{-- Opciones --}}
