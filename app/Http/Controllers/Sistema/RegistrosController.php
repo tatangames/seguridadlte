@@ -451,6 +451,7 @@ class RegistrosController extends Controller
             $reg->material_linea = $request->lineaEditar ?? '';
             $reg->jefe_firma     = $infoJefeFirma->nombre;
             $reg->cargo_firma    = $infoJefeFirma->cargo;
+            $reg->fecha_real = Carbon::now('America/El_Salvador')->format('Y-m-d H:i:s');
             $reg->save();
 
             // ── Guardar detalle ────────────────────────────────────────

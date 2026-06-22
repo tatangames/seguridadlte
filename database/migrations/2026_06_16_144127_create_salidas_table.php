@@ -24,6 +24,10 @@ return new class extends Migration
             $table->string('material_linea', 400)->nullable();
             $table->string('jefe_firma', 100)->nullable();
             $table->string('cargo_firma', 100)->nullable();
+
+            // Ver fecha y hora real que ingreso la salida
+            $table->dateTime('fecha_real')->nullable();
+
         });
     }
 
