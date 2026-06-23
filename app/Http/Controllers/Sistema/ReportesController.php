@@ -29,10 +29,12 @@ class ReportesController extends Controller
 
     public function vistaReporteGenerales()
     {
-        $arrayDistritos = Distrito::orderBy('nombre')->get(); // ajusta el modelo
-        $infoGeneral = InformacionGeneral::where('id', 1)->first();
+        $arrayDistritos  = Distrito::orderBy('nombre')->get();
+        $infoGeneral     = InformacionGeneral::where('id', 1)->first();
+        $arrayMateriales = Materiales::orderBy('nombre')->get(); // ← nuevo
 
-        return view('backend.admin.reportes.vistareportegenerales', compact('arrayDistritos', 'infoGeneral'));
+        return view('backend.admin.reportes.vistareportegenerales',
+            compact('arrayDistritos', 'infoGeneral', 'arrayMateriales'));
     }
 
 
@@ -970,6 +972,228 @@ class ReportesController extends Controller
             Log::error('actualizarPxInformacionGeneral: ' . $e->getMessage());
             return ['success' => 99];
         }
+    }
+
+
+
+
+    public function reportePdfPorInsumo($idmaterial, $desde, $hasta)
+    {
+        // ── Validaciones básicas ───────────────────────────────────────────
+        $infoMaterial = Materiales::find($idmaterial);
+        if (!$infoMaterial) abort(404, 'Material no encontrado');
+        if ($desde > $hasta) abort(400, 'Rango de fechas inválido');
+
+        // ── Datos relacionados del material ───────────────────────────────
+        $marca     = Marca::find($infoMaterial->id_marca);
+        $normativa = Normativa::find($infoMaterial->id_normativa);
+        $unidad    = UnidadMedida::find($infoMaterial->id_medida);
+
+        $nombreMarca     = $marca->nombre     ?? '—';
+        $nombreNormativa = $normativa->nombre ?? '—';
+        $nombreUnidad    = $unidad->nombre    ?? '—';
+
+        // ── Query: todo desde salidas + salidas_detalle + entradas_detalle ─
+        $filas = DB::table('salidas_detalle as sd')
+            ->join('entradas_detalle as ed', 'sd.id_entrada_detalle', '=', 'ed.id')
+            ->join('salidas as s',           'sd.id_salida',          '=', 's.id')
+            ->leftJoin('entradas as en',     'ed.id_entradas',        '=', 'en.id')
+            ->where('ed.id_material', $idmaterial)
+            ->whereBetween('s.fecha', [$desde, $hasta])
+            ->orderBy('s.fecha', 'ASC')
+            ->select([
+                's.fecha',
+                's.colaborador',
+                's.cargo',
+                's.area',
+                's.descripcion',
+                'sd.cantidad_salida',
+                'ed.precio',
+                'en.lote',
+            ])
+            ->get();
+
+        // ── Calcular totales ───────────────────────────────────────────────
+        $totalGeneral = 0;
+        foreach ($filas as $f) {
+            $f->total        = $f->cantidad_salida * $f->precio;
+            $totalGeneral   += $f->total;
+            $f->fechaFormat  = date('d-m-Y', strtotime($f->fecha));
+            $f->precioFormat = '$' . number_format($f->precio, 2, '.', ',');
+            $f->totalFormat  = '$' . number_format($f->total,  2, '.', ',');
+        }
+        $totalGeneralFormat = '$' . number_format($totalGeneral, 2, '.', ',');
+
+        $desdeFormat = date('d-m-Y', strtotime($desde));
+        $hastaFormat = date('d-m-Y', strtotime($hasta));
+        $fechaHoy    = date('d-m-Y', strtotime(Carbon::now('America/El_Salvador')));
+
+        // ── mPDF ──────────────────────────────────────────────────────────
+        $mpdf = new \Mpdf\Mpdf(['tempDir' => sys_get_temp_dir(), 'format' => 'LETTER']);
+        $mpdf->SetTitle('Reporte por Insumo');
+        $mpdf->showImageErrors = false;
+
+        $logoalcaldia = 'images/logo.png';
+
+        // ══ ENCABEZADO ════════════════════════════════════════════════════
+        $html = "
+    <table width='100%' style='border-collapse:collapse; font-family:Arial, sans-serif;'>
+        <tr>
+            <td style='width:25%; border:0.8px solid #000; padding:6px 8px;'>
+                <table width='100%'>
+                    <tr>
+                        <td style='width:30%; text-align:left;'>
+                            <img src='{$logoalcaldia}' style='height:38px'>
+                        </td>
+                        <td style='width:70%; text-align:left; color:#104e8c; font-size:13px; font-weight:bold; line-height:1.3;'>
+                            SANTA ANA NORTE<br>EL SALVADOR
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td style='width:50%; border-top:0.8px solid #000; border-bottom:0.8px solid #000;
+                        padding:6px 8px; text-align:center; font-size:14px; font-weight:bold;'>
+                REPORTE DE ENTREGAS POR INSUMO
+            </td>
+            <td style='width:25%; border:0.8px solid #000; padding:0; vertical-align:top;'>
+                <table width='100%' style='font-size:10px;'>
+                    <tr>
+                        <td width='40%' style='border-right:0.8px solid #000; border-bottom:0.8px solid #000; padding:4px 6px;'><strong>Código:</strong></td>
+                        <td width='60%' style='border-bottom:0.8px solid #000; padding:4px 6px; text-align:center;'>SEAC-003-INS</td>
+                    </tr>
+                    <tr>
+                        <td style='border-right:0.8px solid #000; border-bottom:0.8px solid #000; padding:4px 6px;'><strong>Versión:</strong></td>
+                        <td style='border-bottom:0.8px solid #000; padding:4px 6px; text-align:center;'>000</td>
+                    </tr>
+                    <tr>
+                        <td style='border-right:0.8px solid #000; padding:4px 6px;'><strong>Fecha:</strong></td>
+                        <td style='padding:4px 6px; text-align:center;'>{$fechaHoy}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    <br>
+    ";
+
+        // ══ DATOS DEL INSUMO Y PERÍODO ════════════════════════════════════
+        $html .= "
+    <table width='100%' style='border-collapse:collapse; font-family:Arial, sans-serif;
+                                border:0.8px solid #000; margin-bottom:16px;'>
+        <tr>
+            <td style='width:50%; padding:5px 8px; font-size:12px; border-right:0.8px solid #000;'>
+                <strong>Material:</strong> {$infoMaterial->nombre}
+            </td>
+            <td style='width:50%; padding:5px 8px; font-size:12px;'>
+                <strong>Período:</strong> {$desdeFormat} al {$hastaFormat}
+            </td>
+        </tr>
+        <tr>
+            <td style='padding:5px 8px; font-size:12px; border-top:0.8px solid #000; border-right:0.8px solid #000;'>
+                <strong>Marca:</strong> {$nombreMarca}
+            </td>
+            <td style='padding:5px 8px; font-size:12px; border-top:0.8px solid #000;'>
+                <strong>Normativa:</strong> {$nombreNormativa}
+            </td>
+        </tr>
+        <tr>
+            <td colspan='2' style='padding:5px 8px; font-size:12px; border-top:0.8px solid #000;'>
+                <strong>Unidad de Medida:</strong> {$nombreUnidad}
+            </td>
+        </tr>
+    </table>
+    ";
+
+        // ══ SIN DATOS ═════════════════════════════════════════════════════
+        if ($filas->isEmpty()) {
+            $html .= "
+        <div style='text-align:center; margin-top:40px;'>
+            <p style='font-size:13px; color:#888;'>
+                No se encontraron entregas para este material en el período seleccionado.
+            </p>
+        </div>
+        ";
+        } else {
+
+            // ══ TABLA DE MOVIMIENTOS ══════════════════════════════════════
+            $html .= "
+        <table width='100%' style='border-collapse:collapse; font-family:Arial, sans-serif;'>
+            <thead>
+                <tr>
+                    <th style='font-size:11px; font-weight:bold; text-align:center; padding:5px;
+                                border:1px solid #000; background:#e8eef8; width:9%;'>Fecha</th>
+                    <th style='font-size:11px; font-weight:bold; text-align:center; padding:5px;
+                                border:1px solid #000; background:#e8eef8; width:10%;'>Factura/Lote</th>
+                    <th style='font-size:11px; font-weight:bold; text-align:center; padding:5px;
+                                border:1px solid #000; background:#e8eef8; width:22%;'>Colaborador</th>
+                    <th style='font-size:11px; font-weight:bold; text-align:center; padding:5px;
+                                border:1px solid #000; background:#e8eef8; width:16%;'>Cargo</th>
+                    <th style='font-size:11px; font-weight:bold; text-align:center; padding:5px;
+                                border:1px solid #000; background:#e8eef8; width:14%;'>Área</th>
+                    <th style='font-size:11px; font-weight:bold; text-align:center; padding:5px;
+                                border:1px solid #000; background:#e8eef8; width:8%;'>Cantidad</th>
+                    <th style='font-size:11px; font-weight:bold; text-align:center; padding:5px;
+                                border:1px solid #000; background:#e8eef8; width:10%;'>Precio Unit.</th>
+                    <th style='font-size:11px; font-weight:bold; text-align:center; padding:5px;
+                                border:1px solid #000; background:#e8eef8; width:11%;'>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+        ";
+
+            foreach ($filas as $f) {
+                $colaborador = $f->colaborador ?? '—';
+                $cargo       = $f->cargo       ?? '—';
+                $area        = $f->area        ?? '—';
+                $lote        = $f->lote        ?? '—';
+
+                $html .= "
+                <tr>
+                    <td style='font-size:11px; border:1px solid #000; padding:5px; text-align:center;'>{$f->fechaFormat}</td>
+                    <td style='font-size:11px; border:1px solid #000; padding:5px; text-align:center;'>{$lote}</td>
+                    <td style='font-size:11px; border:1px solid #000; padding:5px;'>{$colaborador}</td>
+                    <td style='font-size:11px; border:1px solid #000; padding:5px;'>{$cargo}</td>
+                    <td style='font-size:11px; border:1px solid #000; padding:5px;'>{$area}</td>
+                    <td style='font-size:11px; border:1px solid #000; padding:5px; text-align:center;'>{$f->cantidad_salida}</td>
+                    <td style='font-size:11px; border:1px solid #000; padding:5px; text-align:right;'>{$f->precioFormat}</td>
+                    <td style='font-size:11px; border:1px solid #000; padding:5px; text-align:right;'>{$f->totalFormat}</td>
+                </tr>
+            ";
+            }
+
+            // — Total general —
+            $html .= "
+                <tr>
+                    <td colspan='7' style='font-size:11px; border:1px solid #000; padding:5px;
+                                            text-align:right; font-weight:bold; background:#f9f9f9;'>
+                        Total General:
+                    </td>
+                    <td style='font-size:11px; border:1px solid #000; padding:5px;
+                                text-align:right; font-weight:bold; background:#f9f9f9;'>
+                        {$totalGeneralFormat}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        ";
+
+            // — Resumen cantidad total —
+            $cantidadTotal = $filas->sum('cantidad_salida');
+            $html .= "
+        <div style='text-align:right; margin-top:10px; margin-right:4px;'>
+            <p style='font-size:12px; margin:0; color:#555;'>
+                <strong>Total de unidades entregadas: {$cantidadTotal}</strong>
+            </p>
+        </div>
+        ";
+        }
+
+        // ══ GENERAR PDF ═══════════════════════════════════════════════════
+        $stylesheet = file_get_contents('css/cssbodega.css');
+        $mpdf->WriteHTML($stylesheet, 1);
+        $mpdf->setFooter('Página: {PAGENO}/{nb}');
+        $mpdf->WriteHTML($html, 2);
+        $mpdf->Output();
     }
 
 

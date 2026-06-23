@@ -206,6 +206,8 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/admin/reportes/pdf/recibe-separados/{id}', [ReportesController::class,'reporteEmpleadoRecibidos']);
     Route::get('/admin/existencia/pdf/generar', [ReportesController::class,'reportePdfExistencias']);
     Route::get('/admin/bodega/reportespdf/inicial/final/{desde}/{hasta}', [ReportesController::class, 'reportePDFInicialPorPeriodos']);
+    Route::get('/admin/reportes/pdf/insumo/{idmaterial}/{desde}/{hasta}', [ReportesController::class, 'reportePdfPorInsumo']);
+
 
     // --- ACTUALIZAR FIRMAS LAS DISTANCIAS DE LOS REPORTES ---
     Route::post('/admin/informacion/actualizar/px', [ReportesController::class, 'actualizarPxInformacionGeneral'])

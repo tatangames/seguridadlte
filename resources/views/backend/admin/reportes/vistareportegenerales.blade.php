@@ -40,7 +40,7 @@
         /* ── Grid de tarjetas ── */
         .reportes-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
             padding: 10px 0 20px;
         }
@@ -54,6 +54,7 @@
             display: flex;
             flex-direction: column;
             transition: transform .15s, box-shadow .15s;
+            height: 100%;
         }
         .reporte-card:hover {
             transform: translateY(-3px);
@@ -88,6 +89,7 @@
         .reporte-card.blue  .reporte-card-header { background: linear-gradient(135deg, #1d4ed8, #3b82f6); }
         .reporte-card.amber .reporte-card-header { background: linear-gradient(135deg, #b45309, #d97706); }
         .reporte-card.green .reporte-card-header { background: linear-gradient(135deg, #15803d, #22c55e); }
+        .reporte-card.teal  .reporte-card-header { background: linear-gradient(135deg, #0f766e, #14b8a6); }
 
         /* ── Cuerpo de tarjeta ── */
         .reporte-card-body {
@@ -174,14 +176,10 @@
         .reporte-card.amber .btn-generar:hover { background: #b45309; }
         .reporte-card.green .btn-generar { background: #16a34a; }
         .reporte-card.green .btn-generar:hover { background: #15803d; }
+        .reporte-card.teal  .btn-generar { background: #0f766e; }
+        .reporte-card.teal  .btn-generar:hover { background: #0d9488; }
 
-        @media (max-width: 640px) {
-            .reportes-grid { grid-template-columns: 1fr; }
-            .reporte-fields .field-row { flex-direction: column; }
-        }
-
-
-        /* ── Tarjeta configuración ── */
+        /* ── Tarjeta configuración (morado) ── */
         .reporte-card .reporte-header {
             padding: 18px 22px;
             display: flex;
@@ -189,7 +187,6 @@
             gap: 14px;
             color: #fff;
             background: linear-gradient(135deg, #6d28d9, #8b5cf6);
-            border-radius: 0;
         }
         .reporte-card .reporte-header h5 {
             margin: 0;
@@ -216,6 +213,7 @@
             transition: background .15s;
         }
         .btn-pdf.morado:hover { background: #6d28d9; }
+
         .divider { border-color: #e2e8f0; margin: 14px 0; }
         .field-label {
             font-size: 11px;
@@ -227,7 +225,23 @@
             margin-bottom: 4px;
         }
 
+        /* ── Fila inferior alineada ── */
+        .row-inferior {
+            display: flex;
+            gap: 20px;
+            align-items: stretch;
+            margin-bottom: 20px;
+        }
+        .row-inferior .col-insumo    { flex: 0 0 66.66%; max-width: 66.66%; }
+        .row-inferior .col-config    { flex: 0 0 33.33%; max-width: 33.33%; }
 
+        @media (max-width: 768px) {
+            .reportes-grid        { grid-template-columns: 1fr; }
+            .reporte-fields .field-row { flex-direction: column; }
+            .row-inferior         { flex-direction: column; }
+            .row-inferior .col-insumo,
+            .row-inferior .col-config { flex: 1; max-width: 100%; }
+        }
     </style>
 @stop
 
@@ -236,9 +250,10 @@
         <section class="content">
             <div class="container-fluid">
 
+                {{-- ══ FILA SUPERIOR: 3 tarjetas en grid ══ --}}
                 <div class="reportes-grid">
 
-                    {{-- ══ TARJETA 1: INVENTARIO ACTUAL ══ --}}
+                    {{-- TARJETA 1: INVENTARIO ACTUAL --}}
                     <div class="reporte-card blue">
                         <div class="reporte-card-header">
                             <div class="card-icon"><i class="fas fa-boxes"></i></div>
@@ -252,7 +267,7 @@
                         </div>
                     </div>
 
-                    {{-- ══ TARJETA 2: CONTROL DE ENTRADAS/SALIDAS POR PERÍODO ══ --}}
+                    {{-- TARJETA 2: CONTROL DE ENTRADAS/SALIDAS POR PERÍODO --}}
                     <div class="reporte-card amber">
                         <div class="reporte-card-header">
                             <div class="card-icon"><i class="fas fa-exchange-alt"></i></div>
@@ -278,7 +293,7 @@
                         </div>
                     </div>
 
-                    {{-- ══ TARJETA 3: MATERIALES ENTREGADOS A EMPLEADO ══ --}}
+                    {{-- TARJETA 3: MATERIALES ENTREGADOS A EMPLEADO --}}
                     <div class="reporte-card green">
                         <div class="reporte-card-header">
                             <div class="card-icon"><i class="fas fa-user-check"></i></div>
@@ -320,51 +335,93 @@
                             </button>
                         </div>
                     </div>
-                </div>
 
-                {{-- ══ CONFIGURACIÓN: Distancias del Reporte (píxeles) ══ --}}
-                <div class="col-md-6">
-                    <div class="reporte-card">
-                        <div class="reporte-header completado">
-                            <i class="fas fa-sliders-h"></i>
-                            <h5>Configuración de Distancias del Reporte</h5>
-                        </div>
-                        <div class="reporte-body">
-                            <p style="font-size:13px; color:#666; margin-bottom:14px;">
-                                Ajusta el espacio en píxeles para las firmas en los reportes PDF.
-                            </p>
-                            <hr class="divider">
+                </div>{{-- /.reportes-grid --}}
 
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label class="field-label">
-                                        <i class="fas fa-signature mr-1"></i>Píxeles Firmas
-                                    </label>
-                                    <input type="number" min="0" class="form-control" id="config-px-firmas"
-                                           value="{{ $infoGeneral->px_firmas ?? 0 }}">
-                                </div>
 
-                                <div class="col-md-6 d-flex align-items-end">
-                                    <div class="custom-control custom-switch mb-1">
-                                        <input type="checkbox" class="custom-control-input" id="config-salto-pagina"
-                                            {{ ($infoGeneral->salto_pagina ?? false) ? 'checked' : '' }}>
-                                        <label class="custom-control-label" for="config-salto-pagina"
-                                               style="font-size:13px; padding-top:2px;">
-                                            Salto de página antes de firma
-                                        </label>
+                {{-- ══ FILA INFERIOR: Insumo (2/3) + Configuración (1/3) ══ --}}
+                <div class="row-inferior">
+
+                    {{-- TARJETA 4: ENTREGAS POR INSUMO --}}
+                    <div class="col-insumo">
+                        <div class="reporte-card teal">
+                            <div class="reporte-card-header">
+                                <div class="card-icon"><i class="fas fa-box-open"></i></div>
+                                <h5>Entregas por Insumo</h5>
+                            </div>
+                            <div class="reporte-card-body">
+                                <p>Muestra a quién se le ha entregado un material específico dentro de un rango de fechas, con precio unitario y total por entrega.</p>
+                                <div class="reporte-fields">
+                                    <div class="field-row">
+                                        <div class="field-item">
+                                            <label>Fecha Desde <span class="required-star">*</span></label>
+                                            <input type="date" id="insumo-desde">
+                                        </div>
+                                        <div class="field-item">
+                                            <label>Fecha Hasta <span class="required-star">*</span></label>
+                                            <input type="date" id="insumo-hasta">
+                                        </div>
+                                    </div>
+                                    <div class="field-row">
+                                        <div class="field-item">
+                                            <label>Material <span class="required-star">*</span></label>
+                                            <select id="insumo-material">
+                                                <option value="0" disabled selected>Seleccionar material...</option>
+                                                @foreach($arrayMateriales as $mat)
+                                                    <option value="{{ $mat->id }}">{{ $mat->nombre }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div class="mt-3">
-                                <button type="button" onclick="actualizarPxConfig()" class="btn-pdf morado">
-                                    <i class="fas fa-save"></i> Guardar Cambios
+                                <button type="button" onclick="pdfInsumo()" class="btn-generar">
+                                    <i class="fas fa-file-pdf"></i> Generar PDF
                                 </button>
                             </div>
                         </div>
                     </div>
-                </div>
 
+                    {{-- TARJETA 5: CONFIGURACIÓN --}}
+                    <div class="col-config">
+                        <div class="reporte-card">
+                            <div class="reporte-header">
+                                <i class="fas fa-sliders-h"></i>
+                                <h5>Configuración de Distancias del Reporte</h5>
+                            </div>
+                            <div class="reporte-body">
+                                <p style="font-size:13px; color:#666; margin-bottom:14px;">
+                                    Ajusta el espacio en píxeles para las firmas en los reportes PDF.
+                                </p>
+                                <hr class="divider">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <label class="field-label">
+                                            <i class="fas fa-signature mr-1"></i>Píxeles Firmas
+                                        </label>
+                                        <input type="number" min="0" class="form-control" id="config-px-firmas"
+                                               value="{{ $infoGeneral->px_firmas ?? 0 }}">
+                                    </div>
+                                    <div class="col-md-12 mt-3">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="config-salto-pagina"
+                                                {{ ($infoGeneral->salto_pagina ?? false) ? 'checked' : '' }}>
+                                            <label class="custom-control-label" for="config-salto-pagina"
+                                                   style="font-size:13px; padding-top:2px;">
+                                                Salto de página antes de firma
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button type="button" onclick="actualizarPxConfig()" class="btn-pdf morado">
+                                        <i class="fas fa-save"></i> Guardar Cambios
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>{{-- /.row-inferior --}}
 
             </div>
         </section>
@@ -380,33 +437,35 @@
 
     <script>
         $(function () {
-            // ── Bindings cascada distrito → unidad → empleado ──
-            $('#select-distrito').on('change', function () {
-                buscarUnidad();
-            });
-            $('#select-unidad').on('change', function () {
-                buscarEmpleado();
+            // ── Cascada distrito → unidad → empleado ──
+            $('#select-distrito').on('change', function () { buscarUnidad(); });
+            $('#select-unidad').on('change',   function () { buscarEmpleado(); });
+
+            // ── Select2 buscador de material ──
+            $('#insumo-material').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Buscar material...',
+                allowClear: true,
+                width: '100%',
             });
         });
 
-        // ── Tarjeta 1: Inventario actual ─────────────────────────────────────────
+        // ── Tarjeta 1: Inventario actual ──────────────────────────────────────
         function pdfExistencias() {
             window.open(urlAdmin + '/admin/existencia/pdf/generar');
         }
 
-        // ── Tarjeta 2: Control por período ───────────────────────────────────────
+        // ── Tarjeta 2: Control por período ────────────────────────────────────
         function pdfPeriodos() {
             var desde = document.getElementById('periodo-desde').value;
             var hasta = document.getElementById('periodo-hasta').value;
-
-            if (!desde) { toastr.error('Debe seleccionar la fecha desde'); return; }
-            if (!hasta)  { toastr.error('Debe seleccionar la fecha hasta');  return; }
+            if (!desde)        { toastr.error('Debe seleccionar la fecha desde'); return; }
+            if (!hasta)        { toastr.error('Debe seleccionar la fecha hasta');  return; }
             if (desde > hasta) { toastr.error('La fecha desde no puede ser mayor a la fecha hasta'); return; }
-
             window.open(urlAdmin + '/admin/bodega/reportespdf/inicial/final/' + desde + '/' + hasta);
         }
 
-        // ── Tarjeta 3: Materiales entregados a empleado ──────────────────────────
+        // ── Tarjeta 3: Materiales entregados a empleado ───────────────────────
         function pdfEncargado() {
             var idempleado = $('#select-empleado').val();
             if (!idempleado || idempleado === '0') {
@@ -423,7 +482,6 @@
                 $('#select-empleado').html('<option value="0" disabled selected>Seleccionar opción</option>');
                 return;
             }
-
             openLoading();
             axios.post(urlAdmin + '/admin/empleados/buscarunidad', { id: id })
                 .then(function(response) {
@@ -448,7 +506,6 @@
                 $('#select-empleado').html('<option value="0" disabled selected>Seleccionar opción</option>');
                 return;
             }
-
             openLoading();
             axios.post(urlAdmin + '/admin/empleados/buscarunidad-empleado/reporte', { id: id })
                 .then(function(response) {
@@ -466,16 +523,23 @@
                 .catch(function() { closeLoading(); toastr.error('Error al cargar empleados'); });
         }
 
+        // ── Tarjeta 4: Entregas por insumo ───────────────────────────────────
+        function pdfInsumo() {
+            var desde    = document.getElementById('insumo-desde').value;
+            var hasta    = document.getElementById('insumo-hasta').value;
+            var material = $('#insumo-material').val();
+            if (!desde)                        { toastr.error('Debe seleccionar la fecha desde'); return; }
+            if (!hasta)                        { toastr.error('Debe seleccionar la fecha hasta');  return; }
+            if (desde > hasta)                 { toastr.error('La fecha desde no puede ser mayor a la fecha hasta'); return; }
+            if (!material || material === '0') { toastr.error('Debe seleccionar un material'); return; }
+            window.open(urlAdmin + '/admin/reportes/pdf/insumo/' + material + '/' + desde + '/' + hasta);
+        }
 
+        // ── Configuración px firmas ───────────────────────────────────────────
         function actualizarPxConfig() {
             var pxFirmas    = parseInt($('#config-px-firmas').val()) || 0;
             var saltoPagina = $('#config-salto-pagina').is(':checked') ? 1 : 0;
-
-            if (pxFirmas < 0) {
-                toastr.error('El valor no puede ser negativo');
-                return;
-            }
-
+            if (pxFirmas < 0) { toastr.error('El valor no puede ser negativo'); return; }
             axios.post("{{ route('admin.informacion.actualizar.px') }}", {
                 _token:       '{{ csrf_token() }}',
                 px_firmas:    pxFirmas,
@@ -492,7 +556,5 @@
                     toastr.error('Ocurrió un error al guardar');
                 });
         }
-
-
     </script>
 @endsection
