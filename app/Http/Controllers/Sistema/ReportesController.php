@@ -1059,15 +1059,15 @@ class ReportesController extends Controller
                 <table width='100%' style='font-size:10px;'>
                     <tr>
                         <td width='40%' style='border-right:0.8px solid #000; border-bottom:0.8px solid #000; padding:4px 6px;'><strong>Código:</strong></td>
-                        <td width='60%' style='border-bottom:0.8px solid #000; padding:4px 6px; text-align:center;'>SEAC-003-INS</td>
+                        <td width='60%' style='border-bottom:0.8px solid #000; padding:4px 6px; text-align:center;'></td>
                     </tr>
                     <tr>
                         <td style='border-right:0.8px solid #000; border-bottom:0.8px solid #000; padding:4px 6px;'><strong>Versión:</strong></td>
-                        <td style='border-bottom:0.8px solid #000; padding:4px 6px; text-align:center;'>000</td>
+                        <td style='border-bottom:0.8px solid #000; padding:4px 6px; text-align:center;'></td>
                     </tr>
                     <tr>
                         <td style='border-right:0.8px solid #000; padding:4px 6px;'><strong>Fecha:</strong></td>
-                        <td style='padding:4px 6px; text-align:center;'>{$fechaHoy}</td>
+                        <td style='padding:4px 6px; text-align:center;'></td>
                     </tr>
                 </table>
             </td>
@@ -1121,9 +1121,9 @@ class ReportesController extends Controller
             <thead>
                 <tr>
                     <th style='font-size:11px; font-weight:bold; text-align:center; padding:5px;
-                                border:1px solid #000; background:#e8eef8; width:9%;'>Fecha</th>
+                                border:1px solid #000; background:#e8eef8; width:11%;'>Fecha</th>
                     <th style='font-size:11px; font-weight:bold; text-align:center; padding:5px;
-                                border:1px solid #000; background:#e8eef8; width:10%;'>Factura/Lote</th>
+                                border:1px solid #000; background:#e8eef8; width:10%;'>Factura</th>
                     <th style='font-size:11px; font-weight:bold; text-align:center; padding:5px;
                                 border:1px solid #000; background:#e8eef8; width:22%;'>Colaborador</th>
                     <th style='font-size:11px; font-weight:bold; text-align:center; padding:5px;
@@ -1131,7 +1131,7 @@ class ReportesController extends Controller
                     <th style='font-size:11px; font-weight:bold; text-align:center; padding:5px;
                                 border:1px solid #000; background:#e8eef8; width:14%;'>Área</th>
                     <th style='font-size:11px; font-weight:bold; text-align:center; padding:5px;
-                                border:1px solid #000; background:#e8eef8; width:8%;'>Cantidad</th>
+                                border:1px solid #000; background:#e8eef8; width:10%;'>Cantidad</th>
                     <th style='font-size:11px; font-weight:bold; text-align:center; padding:5px;
                                 border:1px solid #000; background:#e8eef8; width:10%;'>Precio Unit.</th>
                     <th style='font-size:11px; font-weight:bold; text-align:center; padding:5px;
