@@ -11,9 +11,7 @@
             $stockClass = 'danger';
         }
 
-        $oeLabel = $dato->oe_codigo
-            ? $dato->oe_codigo . ' - ' . $dato->oe_nombre
-            : ($dato->oe_nombre ?? null);
+      $oeLabel = $dato->oe_codigo ?? $dato->oe_nombre ?? null;
     @endphp
 
     <tr

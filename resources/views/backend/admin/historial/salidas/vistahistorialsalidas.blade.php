@@ -58,53 +58,35 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
-                                    <label>Distrito</label>
-                                    <select id="select-distrito-filtro" class="form-control" style="width:100%">
+                                    <label>Empleado</label>
+                                    <select id="select-empleado-filtro" class="form-control" style="width:100%">
                                         <option value="">— Todos —</option>
-                                        @foreach($arrayDistrito as $d)
-                                            <option value="{{ $d->id }}">{{ $d->nombre }}</option>
+                                        @foreach($arrayEmpleados as $e)
+                                            <option value="{{ $e->id }}">{{ $e->nombre }}</option>
                                         @endforeach
                                     </select>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label>Unidad</label>
-                                    <select id="select-unidad-filtro" class="form-control" style="width:100%" disabled>
-                                        <option value="">— Seleccionar distrito primero —</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label>Empleado</label>
-                                    <select id="select-empleado-filtro" class="form-control" style="width:100%" disabled>
-                                        <option value="">— Seleccionar unidad primero —</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label>Fecha desde</label>
+                                    <label>Fecha desde (opcional)</label>
                                     <input type="date" id="fecha-desde-filtro" class="form-control">
                                 </div>
                             </div>
-                        </div>
-                        <div class="row">
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label>Fecha hasta</label>
+                                    <label>Fecha hasta (opcional)</label>
                                     <input type="date" id="fecha-hasta-filtro" class="form-control">
                                 </div>
                             </div>
-                            <div class="col-md-9 d-flex align-items-end">
+                            <div class="col-md-2 d-flex align-items-end">
                                 <div class="form-group mb-0">
-                                    <button type="button" class="btn btn-primary" onclick="buscarConFiltros()">
+                                    <button type="button" class="btn btn-primary btn-block" onclick="buscarConFiltros()">
                                         <i class="fas fa-search mr-1"></i> Buscar
                                     </button>
-                                    <button type="button" class="btn btn-secondary" onclick="limpiarFiltros()">
+                                    <button type="button" class="btn btn-secondary btn-block mt-1" onclick="limpiarFiltros()">
                                         <i class="fas fa-eraser mr-1"></i> Limpiar
                                     </button>
                                 </div>
@@ -350,65 +332,15 @@
         // ════════════════════════════════════════════════════════════
         $(function () {
 
-            // Panel de filtros
-            initS2('#select-distrito-filtro', s2optsFiltro());
-            initS2('#select-unidad-filtro',   s2optsFiltro());
+            // Panel de filtros — solo empleado
             initS2('#select-empleado-filtro', s2optsFiltro());
 
-            // Modal editar
+            // Modal editar — cascada completa
             initS2('#select-distrito-editar', s2optsEditar());
             initS2('#select-unidad-editar',   s2optsEditar());
             initS2('#select-empleado-editar', s2optsEditar());
 
-            // ── Cascada filtros: distrito -> unidad ──────────────────
-            $('#select-distrito-filtro').on('change', function () {
-                var idDistrito = $(this).val();
-                resetSelect('#select-unidad-filtro',   '— Seleccionar distrito primero —', true,  s2optsFiltro());
-                resetSelect('#select-empleado-filtro', '— Seleccionar unidad primero —',   true,  s2optsFiltro());
-                if (!idDistrito) return;
-
-                openLoading();
-                axios.post(urlAdmin + '/admin/empleados/buscarunidad', { id: idDistrito })
-                    .then(function (r) {
-                        closeLoading();
-                        if (r.data.success === 1) {
-                            var $s = $('#select-unidad-filtro');
-                            $s.empty().append('<option value="">— Todas —</option>');
-                            r.data.arrayUnidad.forEach(function (v) {
-                                $s.append('<option value="' + v.id + '">' + v.nombre + '</option>');
-                            });
-                            $s.prop('disabled', false);
-                            initS2('#select-unidad-filtro', s2optsFiltro());
-                        } else { toastr.error('No se encontraron unidades'); }
-                    })
-                    .catch(function () { closeLoading(); toastr.error('Error al cargar unidades'); });
-            });
-
-            // ── Cascada filtros: unidad -> empleado ──────────────────
-            $('#select-unidad-filtro').on('change', function () {
-                var idUnidad = $(this).val();
-                resetSelect('#select-empleado-filtro', '— Seleccionar unidad primero —', true, s2optsFiltro());
-                if (!idUnidad) return;
-
-                openLoading();
-                axios.post(urlAdmin + '/admin/empleados/buscarunidad-empleado/reporte', { id: idUnidad })
-                    .then(function (r) {
-                        closeLoading();
-                        if (r.data.success === 1) {
-                            var $s = $('#select-empleado-filtro');
-                            $s.empty().append('<option value="">— Todos —</option>');
-                            r.data.arrayEmpleados.forEach(function (v) {
-                                $s.append('<option value="' + v.id + '">' + v.nombreCompleto + '</option>');
-                            });
-                            $s.prop('disabled', false);
-                            initS2('#select-empleado-filtro', s2optsFiltro());
-                        } else { toastr.error('No se encontraron empleados'); }
-                    })
-                    .catch(function () { closeLoading(); toastr.error('Error al cargar empleados'); });
-            });
-
             // ── Cascada modal editar: distrito -> unidad (manual) ────
-            // Solo se dispara cuando el USUARIO cambia el distrito
             $('#select-distrito-editar').on('select2:select select2:unselect', function () {
                 buscarUnidadEditar(null, null, false);
             });
@@ -471,7 +403,6 @@
                         $s.select2(s2optsEditar());
 
                         if (idUnidadPre) {
-                            // Continúa la cascada → ella cierra el loading
                             buscarEmpleadoEditar(idEmpleadoPre, silencioso);
                         } else {
                             resetSelect('#select-empleado-editar', '— Seleccionar unidad primero —', false, s2optsEditar());
@@ -510,7 +441,7 @@
                     } else {
                         toastr.error('No se encontraron empleados');
                     }
-                    closeLoading(); // ← siempre, fin de la cadena
+                    closeLoading();
                 })
                 .catch(function () { closeLoading(); toastr.error('Error al cargar empleados'); });
         }
@@ -537,10 +468,7 @@
                         $('#modalEditar').modal('show');
 
                         if (s.id_distrito) {
-                            // Las opciones de distrito ya están en el DOM (Blade las renderizó)
-                            // Solo seteamos el valor y refrescamos select2
                             $('#select-distrito-editar').val(s.id_distrito).trigger('change.select2');
-                            // Cascada con preselección
                             buscarUnidadEditar(s.id_unidad_empleado, s.id_empleado, true);
                         } else {
                             closeLoading();
@@ -548,7 +476,6 @@
                     } else {
                         closeLoading();
                         toastr.error('No se pudo cargar la información.');
-
                     }
                 })
                 .catch(function () { closeLoading(); toastr.error('Error al obtener información'); });
@@ -663,8 +590,6 @@
 
         function buscarConFiltros() {
             cargarTablaConFiltros({
-                id_distrito:  $('#select-distrito-filtro').val() || '',
-                id_unidad:    $('#select-unidad-filtro').val()   || '',
                 id_empleado:  $('#select-empleado-filtro').val() || '',
                 fecha_desde:  $('#fecha-desde-filtro').val()     || '',
                 fecha_hasta:  $('#fecha-hasta-filtro').val()     || '',
@@ -673,7 +598,7 @@
         }
 
         function limpiarFiltros() {
-            $('#select-distrito-filtro').val('').trigger('change');
+            $('#select-empleado-filtro').val('').trigger('change');
             $('#fecha-desde-filtro').val('');
             $('#fecha-hasta-filtro').val('');
             $('#tablaDatatable').html(

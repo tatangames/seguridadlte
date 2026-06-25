@@ -47,6 +47,7 @@ class ReportesController extends Controller
         $jefeDeUnidad = DB::table('jefe_unidad')
             ->join('empleado', 'jefe_unidad.id_empleado', '=', 'empleado.id')
             ->where('jefe_unidad.id_unidad_empleado', $request->id)
+            ->where('empleado.activo', 1)
             ->pluck('empleado.nombre')
             ->implode(' / ');
 

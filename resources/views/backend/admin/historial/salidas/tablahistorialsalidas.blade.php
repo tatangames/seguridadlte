@@ -7,11 +7,12 @@
                         <table id="tabla" class="table table-bordered table-striped">
                             <thead>
                             <tr>
-                                <th style="width:10%">Fecha</th>
-                                <th style="width:15%">Empleado</th>
-                                <th style="width:15%">Colaborador</th>
-                                <th style="width:28%">Descripción</th>
-                                <th style="width:20%">Opciones</th>
+                                <th style="width:8%">Fecha</th>
+                                <th style="width:13%">Empleado</th>
+                                <th style="width:11%">Área</th>
+                                <th style="width:11%">Cargo</th>
+                                <th style="width:20%">Descripción</th>
+                                <th style="width:24%">Opciones</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -19,7 +20,8 @@
                                 <tr>
                                     <td data-order="{{ $dato->fecha }}">{{ $dato->fecha_fmt }}</td>
                                     <td>{{ $dato->empleado->nombre ?? '—' }}</td>
-                                    <td>{{ $dato->colaborador ?? '—' }}</td>
+                                    <td>{{ $dato->area ?? '—' }}</td>
+                                    <td>{{ $dato->cargo ?? '—' }}</td>
                                     <td>{{ $dato->descripcion ?? '—' }}</td>
                                     <td class="text-center">
                                         <button type="button" style="margin:2px"

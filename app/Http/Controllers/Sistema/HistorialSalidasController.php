@@ -22,15 +22,16 @@ class HistorialSalidasController extends Controller
 {
     public function indexHistorialSalidas()
     {
-        $arrayDistrito = Distrito::orderBy('nombre', 'ASC')->get();
+        $arrayDistrito  = Distrito::orderBy('nombre')->get();
+        $arrayEmpleados = Empleado::orderBy('nombre')->get();   // ajusta el modelo/campo a tu proyecto
 
         return view('backend.admin.historial.salidas.vistahistorialsalidas',
-            compact('arrayDistrito'));
+            compact('arrayDistrito', 'arrayEmpleados'));
     }
 
     public function tablaHistorialSalidas(Request $request)
     {
-        // Solo bloquear si no vino del botón Buscar
+        // Solo cargar datos cuando el usuario presiona Buscar
         if (!$request->filled('buscar_todos')) {
             $arraySalidas = collect();
             return view('backend.admin.historial.salidas.tablahistorialsalidas',
@@ -39,18 +40,12 @@ class HistorialSalidasController extends Controller
 
         $query = Salidas::with(['empleado']);
 
+        // Filtro por empleado (opcional)
         if ($request->filled('id_empleado')) {
             $query->where('id_empleado', $request->id_empleado);
-        } elseif ($request->filled('id_unidad')) {
-            $query->whereHas('empleado', function ($q) use ($request) {
-                $q->where('id_unidad_empleado', $request->id_unidad);
-            });
-        } elseif ($request->filled('id_distrito')) {
-            $query->whereHas('empleado.unidadEmpleado', function ($q) use ($request) {
-                $q->where('id_distrito', $request->id_distrito);
-            });
         }
 
+        // Filtro por rango de fechas (ambos opcionales e independientes)
         if ($request->filled('fecha_desde')) {
             $query->whereDate('fecha', '>=', $request->fecha_desde);
         }
