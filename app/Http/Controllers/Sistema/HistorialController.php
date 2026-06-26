@@ -25,11 +25,12 @@ class HistorialController extends Controller
 
     public function tablaHistorialEntradas(Request $request)
     {
-        $arrayEntradas = Entradas::with(['proveedor', 'bodega'])
+        $arrayEntradas = Entradas::with(['proveedor', 'bodega', 'detalle'])
             ->orderBy('fecha', 'desc')
             ->get()
             ->map(function ($item) {
-                $item->fecha_fmt = date('d/m/Y', strtotime($item->fecha));
+                $item->fecha_fmt    = date('d/m/Y', strtotime($item->fecha));
+                $item->totalEntrada = $item->detalle->sum(fn($d) => $d->cantidad_inicial * $d->precio);
                 return $item;
             });
 

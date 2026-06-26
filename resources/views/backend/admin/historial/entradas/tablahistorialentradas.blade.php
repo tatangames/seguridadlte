@@ -7,12 +7,13 @@
                         <table id="tabla" class="table table-bordered table-striped">
                             <thead>
                             <tr>
-                                <th style="width:10%">Fecha</th>
-                                <th style="width:10%">Bodega</th>
-                                <th style="width:11%">Lote / Factura</th>
-                                <th style="width:15%">Proveedor</th>
-                                <th style="width:28%">Descripción</th>
-                                <th style="width:18%">Opciones</th>
+                                <th style="width:9%">Fecha</th>
+                                <th style="width:9%">Bodega</th>
+                                <th style="width:10%">Lote / Factura</th>
+                                <th style="width:13%">Proveedor</th>
+                                <th style="width:9%">Total</th>
+                                <th style="width:23%">Descripción</th>
+                                <th style="width:27%">Opciones</th>
                             </tr>
                             </thead>
 
@@ -33,6 +34,10 @@
 
                                     <td>
                                         {{ $dato->proveedor->nombre ?? '—' }}
+                                    </td>
+
+                                    <td class="text-right font-weight-bold text-success">
+                                        ${{ number_format($dato->totalEntrada, 4) }}
                                     </td>
 
                                     <td>
