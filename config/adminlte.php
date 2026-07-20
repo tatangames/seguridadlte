@@ -453,7 +453,7 @@ return [
             'text' => 'Reportes',
             'icon' => 'far fa-circle',
             'route' => 'admin.reportes.index',
-            'can'     => 'sidebar.inventario',
+            'can'     => 'sidebar.reportes',
         ],
 
 
