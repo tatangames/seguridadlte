@@ -261,6 +261,19 @@
                         </div>
                         <div class="reporte-card-body">
                             <p>Existencias actuales (entradas menos salidas). Solo muestra materiales con cantidad mayor a cero.</p>
+                            <div class="reporte-fields">
+                                <div class="field-row">
+                                    <div class="field-item">
+                                        <label>Bodega</label>
+                                        <select id="select-bodega-existencias">
+                                            <option value="0">Todas las bodegas</option>
+                                            @foreach($arrayBodega as $bod)
+                                                <option value="{{ $bod->id }}">{{ $bod->nombre }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
                             <button type="button" onclick="pdfExistencias()" class="btn-generar">
                                 <i class="fas fa-file-pdf"></i> Generar PDF
                             </button>
@@ -284,6 +297,17 @@
                                     <div class="field-item">
                                         <label>Fecha Hasta <span class="required-star">*</span></label>
                                         <input type="date" id="periodo-hasta">
+                                    </div>
+                                </div>
+                                <div class="field-row">
+                                    <div class="field-item">
+                                        <label>Bodega</label>
+                                        <select id="select-bodega-periodos">
+                                            <option value="0">Todas las bodegas</option>
+                                            @foreach($arrayBodega as $bod)
+                                                <option value="{{ $bod->id }}">{{ $bod->nombre }}</option>
+                                            @endforeach
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -452,17 +476,19 @@
 
         // ── Tarjeta 1: Inventario actual ──────────────────────────────────────
         function pdfExistencias() {
-            window.open(urlAdmin + '/admin/existencia/pdf/generar');
+            var bodega = $('#select-bodega-existencias').val() || '0';
+            window.open(urlAdmin + '/admin/existencia/pdf/generar/' + bodega);
         }
 
         // ── Tarjeta 2: Control por período ────────────────────────────────────
         function pdfPeriodos() {
-            var desde = document.getElementById('periodo-desde').value;
-            var hasta = document.getElementById('periodo-hasta').value;
+            var desde  = document.getElementById('periodo-desde').value;
+            var hasta  = document.getElementById('periodo-hasta').value;
+            var bodega = $('#select-bodega-periodos').val() || '0';
             if (!desde)        { toastr.error('Debe seleccionar la fecha desde'); return; }
             if (!hasta)        { toastr.error('Debe seleccionar la fecha hasta');  return; }
             if (desde > hasta) { toastr.error('La fecha desde no puede ser mayor a la fecha hasta'); return; }
-            window.open(urlAdmin + '/admin/bodega/reportespdf/inicial/final/' + desde + '/' + hasta);
+            window.open(urlAdmin + '/admin/bodega/reportespdf/inicial/final/' + desde + '/' + hasta + '/' + bodega);
         }
 
         // ── Tarjeta 3: Materiales entregados a empleado ───────────────────────
