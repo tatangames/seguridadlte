@@ -532,6 +532,10 @@ class RegistrosController extends Controller
         $idEmpleado    = $request->empleado;
         $lineaMaterial = $request->lineaMaterial;
         $idFirma       = $request->jefeFirma;
+        $observaciones = $request->descripcion;
+
+
+
 
         $datos         = json_decode($request->contenedorArray, true);
 
@@ -613,11 +617,11 @@ class RegistrosController extends Controller
         // Número de equipo
         if (!empty(trim($lineaMaterial))) {
             $tabla .= "
-        <div style='text-align:right; margin-top:6px;'>
-            <p style='font-size:13px; margin:0; color:#000;'>
-                <strong>Número de equipo:</strong> " . trim($lineaMaterial) . "
-            </p>
-        </div>";
+    <div style='text-align:right; margin-top:6px;'>
+        <p style='font-size:13px; margin:0; color:#000000;'>
+            <strong style='background-color:#FFD700; padding:2px 4px;'>Número de equipo:</strong> " . trim($lineaMaterial) . "
+        </p>
+    </div>";
         }
 
         // ── Datos del empleado ─────────────────────────────────────────
@@ -678,6 +682,8 @@ class RegistrosController extends Controller
         <tbody>
     ";
 
+
+
         foreach ($detalle as $fila) {
             $si = $fila['reemplazo'] === 'SI' ? 'X' : '';
             $no = $fila['reemplazo'] === 'SI' ? '' : 'X';
@@ -710,20 +716,28 @@ class RegistrosController extends Controller
     </table>
     ";
 
+        if (!empty(trim($observaciones))) {
+            $tabla .= "
+    <p style='text-align:justify; margin-top:5px; font-family:tahoma, arial, sans-serif; font-size:13px; color:#000; line-height:1.6;'>
+        <strong>Observaciones:</strong> " . trim($observaciones) . "
+    </p>
+    ";
+        }
+
         // ── Texto compromiso ───────────────────────────────────────────
         $texto1 = "Esperando que dicho Equipo de protección personal cumpla con lo requerido, tendiendo un total de inversión de; "
             . "<strong>$totalColumnaValor</strong>"
             . " sea utilizado de la mejor manera. Yo me comprometo a utilizar el E.P.P. dentro de las horas laborales que me correspondes, correré con el total de la inversión para su reposición echa a mi persona cuando se me compruebe la venta de este equipo, el mal uso, la perdida, el deterioro por negligencia. El cual firmo la presente para constancia de recibido.";
 
         $tabla .= "
-    <div style='text-align:justify; margin-top:30px; font-family:tahoma, arial, sans-serif;'>
+    <div style='text-align:justify; margin-top:0px; font-family:tahoma, arial, sans-serif;'>
         <p style='font-size:13px; margin:0; color:#000; line-height:1.6;'>$texto1</p>
     </div>
     ";
 
         // ── Firmas ─────────────────────────────────────────────────────
         $tabla .= "
-    <table width='100%' style='margin-top:35px; border-collapse:collapse; font-family:tahoma, arial, sans-serif; font-size:13px;'>
+    <table width='100%' style='margin-top:45px; border-collapse:collapse; font-family:tahoma, arial, sans-serif; font-size:13px;'>
         <tr>
             <td style='width:40%; text-align:center; vertical-align:top; padding:10px;'>
                 <p style='margin:0; font-weight:bold; font-size:14px;'>Firma de Entregado.</p>
@@ -756,7 +770,6 @@ class RegistrosController extends Controller
 
         $stylesheet = file_get_contents('css/cssbodega.css');
         $mpdf->WriteHTML($stylesheet, 1);
-        $mpdf->setFooter("Página: {PAGENO}/{nb}");
         $mpdf->WriteHTML($tabla, 2);
         $mpdf->Output();
     }
@@ -878,8 +891,8 @@ class RegistrosController extends Controller
         if (!empty($numeroEquipo)) {
             $tabla .= "
     <div style='text-align:right; margin-top:6px;'>
-        <p style='font-size:13px; margin:0; color:#000;'>
-            <strong>Número de equipo:</strong> {$numeroEquipo}
+        <p style='font-size:13px; margin:0; color:#000000;'>
+            <strong style='background-color:#FFD700; padding:2px 4px;'>Número de equipo:</strong> {$numeroEquipo}
         </p>
     </div>";
         }
@@ -980,13 +993,21 @@ class RegistrosController extends Controller
 </table>
 ";
 
+        if (!empty(trim($infoSalida->descripcion))) {
+            $tabla .= "
+    <p style='text-align:justify; margin-top:5px; font-family:tahoma, arial, sans-serif; font-size:13px; color:#000; line-height:1.6;'>
+        <strong>Observaciones:</strong> " . trim($infoSalida->descripcion) . "
+    </p>
+    ";
+        }
+
         // ── Texto compromiso ───────────────────────────────────────────
         $texto1 = "Esperando que dicho Equipo de protección personal cumpla con lo requerido, tendiendo un total de inversión de; "
             . "<strong>{$totalColumnaValor}</strong>"
             . " sea utilizado de la mejor manera. Yo me comprometo a utilizar el E.P.P. dentro de las horas laborales que me correspondes, correré con el total de la inversión para su reposición echa a mi persona cuando se me compruebe la venta de este equipo, el mal uso, la perdida, el deterioro por negligencia. El cual firmo la presente para constancia de recibido.";
 
         $tabla .= "
-<div style='text-align:justify; margin-top:30px; font-family:tahoma, arial, sans-serif;'>
+<div style='text-align:justify; margin-top:0px; font-family:tahoma, arial, sans-serif;'>
     <p style='font-size:13px; margin:0; color:#000; line-height:1.6;'>{$texto1}</p>
 </div>
 ";
@@ -1026,7 +1047,6 @@ class RegistrosController extends Controller
 
         $stylesheet = file_get_contents('css/cssbodega.css');
         $mpdf->WriteHTML($stylesheet, 1);
-        $mpdf->setFooter("Página: {PAGENO}/{nb}");
         $mpdf->WriteHTML($tabla, 2);
         $mpdf->Output();
     }

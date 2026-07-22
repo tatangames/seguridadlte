@@ -209,7 +209,7 @@
                         {{-- Fila 5: Material Línea --}}
                         <div class="row">
                             <div class="col-md-6 col-sm-12 mb-3">
-                                <label class="field-label"><i class="fas fa-tag mr-1"></i>Material Línea</label>
+                                <label class="field-label"><i class="fas fa-tag mr-1"></i>Número de Equipo</label>
                                 <input type="text" maxlength="100" class="form-control"
                                        id="linea-editar" autocomplete="off" placeholder="Línea de material…">
                             </div>
@@ -233,9 +233,9 @@
 
                         <div class="row align-items-end">
                             <div class="col-md-8 mb-2">
-                                <label class="field-label"><i class="fas fa-align-left mr-1"></i>Descripción <small style="text-transform:none; font-weight:400">(Opcional)</small></label>
+                                <label class="field-label"><i class="fas fa-align-left mr-1"></i>Observaciones <small style="text-transform:none; font-weight:400">(Opcional)</small></label>
                                 <input type="text" class="form-control" autocomplete="off"
-                                       maxlength="800" id="descripcion" placeholder="Descripción de la salida…">
+                                       maxlength="800" id="descripcion" placeholder="Observaciones de la salida…">
                             </div>
                             <div class="col-md-4 mb-2 d-flex justify-content-end">
                                 <button type="button" onclick="verPDfTemporal()"
