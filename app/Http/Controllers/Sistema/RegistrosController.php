@@ -725,9 +725,9 @@ class RegistrosController extends Controller
         }
 
         // ── Texto compromiso ───────────────────────────────────────────
-        $texto1 = "Esperando que dicho Equipo de protección personal cumpla con lo requerido, tendiendo un total de inversión de; "
+        $texto1 = "Esperando que dicho Equipo de protección personal cumpla con lo requerido, teniendo un total de inversión de; "
             . "<strong>$totalColumnaValor</strong>"
-            . " sea utilizado de la mejor manera. Yo me comprometo a utilizar el E.P.P. dentro de las horas laborales que me correspondes, correré con el total de la inversión para su reposición echa a mi persona cuando se me compruebe la venta de este equipo, el mal uso, la perdida, el deterioro por negligencia. El cual firmo la presente para constancia de recibido.";
+            . " sea utilizado de la mejor manera. Yo me comprometo a utilizar el E.P.P. dentro de las horas laborales que me corresponden, correré con el total de la inversión para su reposición hecha a mi persona cuando se me compruebe la venta de este equipo, el mal uso, la pérdida, el deterioro por negligencia. El cual firmo la presente para constancia de recibido.";
 
         $tabla .= "
     <div style='text-align:justify; margin-top:0px; font-family:tahoma, arial, sans-serif;'>
@@ -1002,9 +1002,9 @@ class RegistrosController extends Controller
         }
 
         // ── Texto compromiso ───────────────────────────────────────────
-        $texto1 = "Esperando que dicho Equipo de protección personal cumpla con lo requerido, tendiendo un total de inversión de; "
+        $texto1 = "Esperando que dicho Equipo de protección personal cumpla con lo requerido, teniendo un total de inversión de; "
             . "<strong>{$totalColumnaValor}</strong>"
-            . " sea utilizado de la mejor manera. Yo me comprometo a utilizar el E.P.P. dentro de las horas laborales que me correspondes, correré con el total de la inversión para su reposición echa a mi persona cuando se me compruebe la venta de este equipo, el mal uso, la perdida, el deterioro por negligencia. El cual firmo la presente para constancia de recibido.";
+            . " sea utilizado de la mejor manera. Yo me comprometo a utilizar el E.P.P. dentro de las horas laborales que me corresponden, correré con el total de la inversión para su reposición hecha a mi persona cuando se me compruebe la venta de este equipo, el mal uso, la pérdida, el deterioro por negligencia. El cual firmo la presente para constancia de recibido.";
 
         $tabla .= "
 <div style='text-align:justify; margin-top:0px; font-family:tahoma, arial, sans-serif;'>
