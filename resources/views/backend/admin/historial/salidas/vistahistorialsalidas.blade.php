@@ -82,7 +82,7 @@
                                 </div>
                             </div>
                             <div class="col-md-2 d-flex align-items-end">
-                                <div class="form-group mb-0">
+                                <div class="form-group mb-0" style="width:100%">
                                     <button type="button" class="btn btn-primary btn-block" onclick="buscarConFiltros()">
                                         <i class="fas fa-search mr-1"></i> Buscar
                                     </button>
@@ -103,6 +103,8 @@
                 <div class="card card-primary">
                     <div class="card-header">
                         <h3 class="card-title">Listado de Salidas</h3>
+                        <br>
+                        <p style="color: white">Solo podra borrar y editar del MES ACTUAL, ya anteriores no deberia ser modificados</p>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -288,7 +290,7 @@
         var detalleIdSalidaActual = null;
 
         // ════════════════════════════════════════════════════════════
-        // SELECT2 — opciones
+        // SELECT2
         // ════════════════════════════════════════════════════════════
         function s2optsEditar() {
             return {
@@ -307,7 +309,6 @@
             };
         }
 
-        // ── Inicializa (o re-inicializa) un select2 ──────────────────
         function initS2(selector, opts) {
             if ($(selector).hasClass('select2-hidden-accessible')) {
                 $(selector).select2('destroy');
@@ -315,7 +316,6 @@
             $(selector).select2(opts);
         }
 
-        // ── Resetea un select y lo re-inicializa ─────────────────────
         function resetSelect(selector, placeholder, disabled, opts) {
             if ($(selector).hasClass('select2-hidden-accessible')) {
                 $(selector).select2('destroy');
@@ -331,26 +331,19 @@
         // DOCUMENT READY
         // ════════════════════════════════════════════════════════════
         $(function () {
-
-            // Panel de filtros — solo empleado
             initS2('#select-empleado-filtro', s2optsFiltro());
-
-            // Modal editar — cascada completa
             initS2('#select-distrito-editar', s2optsEditar());
             initS2('#select-unidad-editar',   s2optsEditar());
             initS2('#select-empleado-editar', s2optsEditar());
 
-            // ── Cascada modal editar: distrito -> unidad (manual) ────
             $('#select-distrito-editar').on('select2:select select2:unselect', function () {
                 buscarUnidadEditar(null, null, false);
             });
 
-            // ── Cascada modal editar: unidad -> empleado (manual) ────
             $('#select-unidad-editar').on('select2:select select2:unselect', function () {
                 buscarEmpleadoEditar(null, false);
             });
 
-            // ── Limpiar modal al cerrar ───────────────────────────────
             $('#modalEditar').on('hidden.bs.modal', function () {
                 limpiarCamposEditar();
             });
@@ -366,11 +359,7 @@
             $('#jefe-firma-editar').val('');
             $('#cargo-firma-editar').val('');
             $('#material-linea-editar').val('');
-
-            // Distrito: NO vaciar opciones, solo limpiar selección
             $('#select-distrito-editar').val('').trigger('change.select2');
-
-            // Unidad y empleado: estos sí se vacían porque se cargan dinámicamente
             resetSelect('#select-unidad-editar',   '— Seleccionar distrito primero —', false, s2optsEditar());
             resetSelect('#select-empleado-editar', '— Seleccionar unidad primero —',   false, s2optsEditar());
         }
@@ -384,7 +373,8 @@
             if (!idDistrito) {
                 resetSelect('#select-unidad-editar',   '— Seleccionar distrito primero —', false, s2optsEditar());
                 resetSelect('#select-empleado-editar', '— Seleccionar unidad primero —',   false, s2optsEditar());
-                if (silencioso) closeLoading();
+                // ── FIX: siempre cerrar loading si no hay distrito ──
+                closeLoading();
                 return;
             }
 
@@ -403,17 +393,23 @@
                         $s.select2(s2optsEditar());
 
                         if (idUnidadPre) {
+                            // La cadena continúa → buscarEmpleadoEditar cerrará el loading
                             buscarEmpleadoEditar(idEmpleadoPre, silencioso);
                         } else {
                             resetSelect('#select-empleado-editar', '— Seleccionar unidad primero —', false, s2optsEditar());
+                            // ── FIX: fin de cadena, cerrar loading aquí ──
                             closeLoading();
                         }
                     } else {
                         toastr.error('No se encontraron unidades');
+                        // ── FIX: también en el else ──
                         closeLoading();
                     }
                 })
-                .catch(function () { closeLoading(); toastr.error('Error al cargar unidades'); });
+                .catch(function () {
+                    closeLoading();
+                    toastr.error('Error al cargar unidades');
+                });
         }
 
         function buscarEmpleadoEditar(idEmpleadoPre, silencioso) {
@@ -425,6 +421,8 @@
                 return;
             }
 
+            // silencioso = true cuando viene del pre-carga al abrir modal,
+            // así no hace doble openLoading
             if (!silencioso) openLoading();
 
             axios.post(urlAdmin + '/admin/empleados/buscarunidad-empleado/reporte', { id: idUnidad })
@@ -441,9 +439,13 @@
                     } else {
                         toastr.error('No se encontraron empleados');
                     }
+                    // ── FIX: fin de cadena, siempre cerrar aquí ──
                     closeLoading();
                 })
-                .catch(function () { closeLoading(); toastr.error('Error al cargar empleados'); });
+                .catch(function () {
+                    closeLoading();
+                    toastr.error('Error al cargar empleados');
+                });
         }
 
         // ════════════════════════════════════════════════════════════
@@ -460,25 +462,31 @@
 
                         $('#id-editar').val(s.id);
                         $('#fecha-editar').val(s.fecha ? s.fecha.substring(0, 10) : '');
-                        $('#descripcion-editar').val(s.descripcion      ?? '');
-                        $('#jefe-firma-editar').val(s.jefe_firma         ?? '');
-                        $('#cargo-firma-editar').val(s.cargo_firma       ?? '');
-                        $('#material-linea-editar').val(s.material_linea ?? '');
+                        $('#descripcion-editar').val(s.descripcion       ?? '');
+                        $('#jefe-firma-editar').val(s.jefe_firma          ?? '');
+                        $('#cargo-firma-editar').val(s.cargo_firma        ?? '');
+                        $('#material-linea-editar').val(s.material_linea  ?? '');
 
                         $('#modalEditar').modal('show');
 
                         if (s.id_distrito) {
+                            // Tiene distrito → la cadena cascada cerrará el loading
                             $('#select-distrito-editar').val(s.id_distrito).trigger('change.select2');
                             buscarUnidadEditar(s.id_unidad_empleado, s.id_empleado, true);
                         } else {
+                            // Sin distrito → cerrar loading aquí directamente
                             closeLoading();
                         }
                     } else {
+                        // ── FIX: error en respuesta → cerrar loading ──
                         closeLoading();
                         toastr.error('No se pudo cargar la información.');
                     }
                 })
-                .catch(function () { closeLoading(); toastr.error('Error al obtener información'); });
+                .catch(function () {
+                    closeLoading();
+                    toastr.error('Error al obtener información');
+                });
         }
 
         // ════════════════════════════════════════════════════════════
@@ -528,7 +536,10 @@
                         toastr.error('Error al actualizar');
                     }
                 })
-                .catch(function () { closeLoading(); toastr.error('Error al actualizar'); });
+                .catch(function () {
+                    closeLoading();
+                    toastr.error('Error al actualizar');
+                });
         }
 
         // ════════════════════════════════════════════════════════════
@@ -578,6 +589,8 @@
                 success: function (html) {
                     $('#tablaDatatable').html(html);
                     initDataTable();
+                    // ── FIX: el partial ya llama closeLoading() con setTimeout,
+                    //         pero si falla el setTimeout lo cubrimos aquí también ──
                 },
                 error: function () {
                     closeLoading();
@@ -629,9 +642,14 @@
                             if (r.data.success === 1) {
                                 toastr.success('Salida eliminada correctamente');
                                 recargar();
-                            } else { toastr.error('Error al eliminar'); }
+                            } else {
+                                toastr.error('Error al eliminar');
+                            }
                         })
-                        .catch(function () { closeLoading(); toastr.error('Error al eliminar'); });
+                        .catch(function () {
+                            closeLoading();
+                            toastr.error('Error al eliminar');
+                        });
                 }
             });
         }
@@ -658,18 +676,25 @@
                 .then(function (r) {
                     $('#detalle-loading').hide();
                     if (r.data.success === 1 && r.data.detalle.length > 0) {
+
+                        // ── Verificar mes actual usando la fecha que devuelve el servidor ──
+                        var esMesActual = r.data.es_mes_actual; // true/false desde backend
+
                         var html = '';
                         r.data.detalle.forEach(function (fila, i) {
+                            var btnBorrar = esMesActual
+                                ? '<button type="button" class="btn btn-danger btn-xs" ' +
+                                'onclick="confirmarEliminarItem(' + fila.id_detalle + ',' + r.data.detalle.length + ')">' +
+                                '<i class="fas fa-trash"></i></button>'
+                                : '<span class="text-muted" title="Solo se puede eliminar en el mes actual">—</span>';
+
                             html += '<tr>' +
                                 '<td>' + (i + 1) + '</td>' +
                                 '<td>' + fila.material + '</td>' +
                                 '<td class="text-center">' + fila.cantidad_salida + '</td>' +
                                 '<td class="text-right">$' + fila.precio + '</td>' +
-                                '<td class="text-center">' +
-                                '<button type="button" class="btn btn-danger btn-xs" ' +
-                                'onclick="confirmarEliminarItem(' + fila.id_detalle + ',' + r.data.detalle.length + ')">' +
-                                '<i class="fas fa-trash"></i></button>' +
-                                '</td></tr>';
+                                '<td class="text-center">' + btnBorrar + '</td>' +
+                                '</tr>';
                         });
                         $('#detalle-tbody').html(html);
                         $('#detalle-contenido').show();
@@ -718,9 +743,14 @@
                             cargarDetalle(detalleIdSalidaActual);
                             recargar();
                         }
-                    } else { toastr.error('Error al eliminar el ítem'); }
+                    } else {
+                        toastr.error('Error al eliminar el ítem');
+                    }
                 })
-                .catch(function () { closeLoading(); toastr.error('Error al eliminar'); });
+                .catch(function () {
+                    closeLoading();
+                    toastr.error('Error al eliminar');
+                });
         }
 
     </script>

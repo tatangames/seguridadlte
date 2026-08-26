@@ -23,7 +23,7 @@ class HistorialSalidasController extends Controller
     public function indexHistorialSalidas()
     {
         $arrayDistrito  = Distrito::orderBy('nombre')->get();
-        $arrayEmpleados = Empleado::orderBy('nombre')->get();   // ajusta el modelo/campo a tu proyecto
+        $arrayEmpleados = Empleado::orderBy('nombre')->get();
 
         return view('backend.admin.historial.salidas.vistahistorialsalidas',
             compact('arrayDistrito', 'arrayEmpleados'));
@@ -31,7 +31,6 @@ class HistorialSalidasController extends Controller
 
     public function tablaHistorialSalidas(Request $request)
     {
-        // Solo cargar datos cuando el usuario presiona Buscar
         if (!$request->filled('buscar_todos')) {
             $arraySalidas = collect();
             return view('backend.admin.historial.salidas.tablahistorialsalidas',
@@ -40,12 +39,10 @@ class HistorialSalidasController extends Controller
 
         $query = Salidas::with(['empleado']);
 
-        // Filtro por empleado (opcional)
         if ($request->filled('id_empleado')) {
             $query->where('id_empleado', $request->id_empleado);
         }
 
-        // Filtro por rango de fechas (ambos opcionales e independientes)
         if ($request->filled('fecha_desde')) {
             $query->whereDate('fecha', '>=', $request->fecha_desde);
         }
@@ -65,7 +62,6 @@ class HistorialSalidasController extends Controller
             compact('arraySalidas'));
     }
 
-
     public function informacionSalida(Request $request)
     {
         $salida = Salidas::find($request->id);
@@ -74,7 +70,6 @@ class HistorialSalidasController extends Controller
             return response()->json(['success' => 0]);
         }
 
-        // Query directa para evitar dependencia de nombres de relaciones
         $datos = DB::table('empleado as e')
             ->join('unidad_empleado as ue', 'ue.id', '=', 'e.id_unidad_empleado')
             ->join('distrito as d',         'd.id',  '=', 'ue.id_distrito')
@@ -98,11 +93,6 @@ class HistorialSalidasController extends Controller
         ]);
     }
 
-
-    /**
-     * Devuelve nombre, cargo y jefe inmediato de un empleado puntual.
-     * Usado para repoblar los campos de solo lectura al cambiar el select de empleado.
-     */
     public function datosEmpleado(Request $request)
     {
         $empleado = Empleado::with('cargo', 'jefe')->find($request->id);
@@ -130,7 +120,20 @@ class HistorialSalidasController extends Controller
             return response()->json(['success' => 0]);
         }
 
-        // Validar que la nueva fecha no sea anterior al ingreso de ningún ítem
+        // ── Validar mes actual ──────────────────────────────────────────
+        $fechaNueva  = Carbon::parse($request->fecha);
+        $ahora       = Carbon::now();
+        $esMesActual = $fechaNueva->month === $ahora->month
+            && $fechaNueva->year  === $ahora->year;
+
+        if (!$esMesActual) {
+            return response()->json([
+                'success' => 0,
+                'msg'     => 'Solo se pueden editar salidas del mes actual.',
+            ]);
+        }
+
+        // ── Validar que la fecha no sea anterior al ingreso de algún ítem ──
         $entradaConflicto = DB::table('salidas_detalle as sd')
             ->join('entradas_detalle as ed', 'ed.id', '=', 'sd.id_entrada_detalle')
             ->join('entradas as e',          'e.id',  '=', 'ed.id_entradas')
@@ -156,7 +159,6 @@ class HistorialSalidasController extends Controller
         $salida->cargo_firma    = $request->cargo_firma    ?: null;
         $salida->material_linea = $request->material_linea ?: null;
 
-        // Solo actualizar datos del empleado si cambió
         if ((int)$request->id_empleado !== (int)$salida->id_empleado) {
 
             $empleadoDatos = DB::table('empleado as e')
@@ -198,7 +200,19 @@ class HistorialSalidasController extends Controller
             return response()->json(['success' => 0]);
         }
 
-        // salidas_detalle usa id_salida (FK correcta)
+        // ── Validar mes actual ──────────────────────────────────────────
+        $ahora       = Carbon::now();
+        $fechaSalida = Carbon::parse($salida->fecha);
+        $esMesActual = $fechaSalida->month === $ahora->month
+            && $fechaSalida->year  === $ahora->year;
+
+        if (!$esMesActual) {
+            return response()->json([
+                'success' => 0,
+                'msg'     => 'Solo se pueden eliminar salidas del mes actual.',
+            ]);
+        }
+
         SalidasDetalle::where('id_salida', $salida->id)->delete();
         $salida->delete();
 
@@ -225,9 +239,16 @@ class HistorialSalidasController extends Controller
                 ];
             });
 
+        // ── Verificar mes actual comparando enteros (evita desfase de zona horaria) ──
+        $ahora       = Carbon::now();
+        $fechaSalida = Carbon::parse($salida->fecha);
+        $esMesActual = $fechaSalida->month === $ahora->month
+            && $fechaSalida->year  === $ahora->year;
+
         return response()->json([
-            'success' => 1,
-            'detalle' => $detalle,
+            'success'       => 1,
+            'detalle'       => $detalle,
+            'es_mes_actual' => $esMesActual,
         ]);
     }
 
@@ -278,7 +299,6 @@ class HistorialSalidasController extends Controller
 
                 $disponibleReal = $entradasDetalle->cantidad_inicial - $totalSalido;
 
-                // ── VALIDACIÓN: Supera disponible ──────────────────────────
                 if ($item['infoCantidad'] > $disponibleReal) {
                     DB::rollback();
                     return response()->json([
@@ -309,11 +329,6 @@ class HistorialSalidasController extends Controller
         }
     }
 
-
-    /**
-     * Eliminar un ítem del detalle de salida.
-     * Si era el último ítem, elimina también la cabecera de la salida.
-     */
     public function eliminarItemDetalleSalida(Request $request)
     {
         $detalle = SalidasDetalle::find($request->id_detalle);
@@ -322,16 +337,31 @@ class HistorialSalidasController extends Controller
             return response()->json(['success' => 0]);
         }
 
-        $idSalida = $detalle->id_salida;
+        $salida = Salidas::find($detalle->id_salida);
 
-        // Eliminar el ítem
+        if (!$salida) {
+            return response()->json(['success' => 0]);
+        }
+
+        // ── Validar mes actual en el servidor (fuente de verdad real) ──
+        $ahora       = Carbon::now();
+        $fechaSalida = Carbon::parse($salida->fecha);
+        $esMesActual = $fechaSalida->month === $ahora->month
+            && $fechaSalida->year  === $ahora->year;
+
+        if (!$esMesActual) {
+            return response()->json([
+                'success' => 0,
+                'msg'     => 'Solo se pueden eliminar ítems del mes actual.',
+            ]);
+        }
+
+        $idSalida = $detalle->id_salida;
         $detalle->delete();
 
-        // Verificar si quedan más ítems en esta salida
         $itemsRestantes = SalidasDetalle::where('id_salida', $idSalida)->count();
 
         if ($itemsRestantes === 0) {
-            // Era el último → eliminar también la cabecera
             Salidas::where('id', $idSalida)->delete();
         }
 
