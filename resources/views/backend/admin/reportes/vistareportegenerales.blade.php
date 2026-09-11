@@ -155,6 +155,21 @@
             background: #fff;
         }
 
+        /* ── Checkbox dentro de tarjeta de reporte ── */
+        .reporte-fields .field-check {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 2px;
+        }
+        .reporte-fields .field-check label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #334155;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+
         /* ── Botón generar ── */
         .btn-generar {
             display: inline-flex;
@@ -272,6 +287,12 @@
                                             @endforeach
                                         </select>
                                     </div>
+                                </div>
+                                <div class="field-check">
+                                    <input type="checkbox" id="check-columnas-existencias">
+                                    <label for="check-columnas-existencias">
+                                        Agregar columnas de Conteo Físico y Diferencia (reporte horizontal)
+                                    </label>
                                 </div>
                             </div>
                             <button type="button" onclick="pdfExistencias()" class="btn-generar">
@@ -476,8 +497,9 @@
 
         // ── Tarjeta 1: Inventario actual ──────────────────────────────────────
         function pdfExistencias() {
-            var bodega = $('#select-bodega-existencias').val() || '0';
-            window.open(urlAdmin + '/admin/existencia/pdf/generar/' + bodega);
+            var bodega   = $('#select-bodega-existencias').val() || '0';
+            var columnas = $('#check-columnas-existencias').is(':checked') ? 1 : 0;
+            window.open(urlAdmin + '/admin/existencia/pdf/generar/' + bodega + '/' + columnas);
         }
 
         // ── Tarjeta 2: Control por período ────────────────────────────────────

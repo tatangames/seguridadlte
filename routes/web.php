@@ -204,7 +204,8 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/admin/reporte/inventario/quehaentrado/proyecto', [ReportesController::class,'vistaReporteGenerales'])->name('admin.reportes.index');
     Route::post('/admin/empleados/buscarunidad-empleado/reporte', [ReportesController::class,'buscarUnidadConDistritoEmpleadoReporte']);
     Route::get('/admin/reportes/pdf/recibe-separados/{id}', [ReportesController::class,'reporteEmpleadoRecibidos']);
-    Route::get('/admin/existencia/pdf/generar/{bodega?}', [ReportesController::class, 'reportePdfExistencias']);
+    Route::get('/admin/existencia/pdf/generar/{bodega?}/{columnas?}', [ReportesController::class, 'reportePdfExistencias']);
+
 
     Route::get('/admin/bodega/reportespdf/inicial/final/{desde}/{hasta}/{bodega?}',
         [ReportesController::class, 'reportePDFInicialPorPeriodos']);

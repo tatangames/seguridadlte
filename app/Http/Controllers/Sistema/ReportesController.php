@@ -313,14 +313,16 @@ class ReportesController extends Controller
     }
 
 
-    public function reportePdfExistencias($bodega = 0)
+
+    public function reportePdfExistencias($bodega = 0, $columnas = 0)
     {
-        $bodega = (int)$bodega;
+        $bodega          = (int)$bodega;
+        $mostrarColumnas = (int)$columnas === 1;
 
         $mpdf = new \Mpdf\Mpdf([
-            'tempDir' => sys_get_temp_dir(),
-            'format' => 'LETTER',
-            'orientation' => 'P',
+            'tempDir'      => sys_get_temp_dir(),
+            'format'       => 'LETTER',
+            'orientation'  => $mostrarColumnas ? 'L' : 'P', // Horizontal si se piden columnas extra
             'default_font' => 'arial',
         ]);
 
@@ -380,8 +382,8 @@ class ReportesController extends Controller
             ->when($bodega > 0, fn($q) => $q->where('e.id_bodega', $bodega))
             ->leftJoin(
                 DB::raw('(SELECT id_entrada_detalle, SUM(cantidad_salida) as salido
-                      FROM salidas_detalle
-                      GROUP BY id_entrada_detalle) as sd'),
+                  FROM salidas_detalle
+                  GROUP BY id_entrada_detalle) as sd'),
                 'sd.id_entrada_detalle', '=', 'ed.id'
             )
             ->select(
@@ -391,61 +393,65 @@ class ReportesController extends Controller
             ->groupBy('ed.id_material')
             ->pluck('valor_real', 'id_material');
 
+        // ── Altura de fila: un poco más alta si se agregan columnas extra ──
+        $padCelda = $mostrarColumnas ? '7px 4px' : '4px';
+        $padTh    = $mostrarColumnas ? '7px 3px' : '5px 3px';
+
         // ══ ENCABEZADO ═══════════════════════════════════════════════════════
         $tabla = "
 <table width='100%' style='border-collapse:collapse; font-family:Arial, sans-serif; margin-bottom:6px;'>
-    <tr>
-        <td style='width:22%; border:0.8px solid #000; padding:6px 8px;'>
-            <table width='100%'>
-                <tr>
-                    <td style='width:35%; text-align:left;'>
-                        <img src='{$logoalcaldia}' style='height:36px'>
-                    </td>
-                    <td style='width:65%; text-align:left; color:#000000;
-                                font-size:10px; font-weight:bold; line-height:1.3;'>
-                        SANTA ANA NORTE<br>EL SALVADOR
-                    </td>
-                </tr>
-            </table>
-        </td>
-        <td style='width:56%; border-top:0.8px solid #000; border-bottom:0.8px solid #000;
-                    padding:8px; text-align:center; vertical-align:middle;'>
-            <div style='font-size:14px; font-weight:bold; color:#000000; letter-spacing:1px;'>
-                REPORTE DE EXISTENCIAS DE E.P.P.
-            </div>
-            <div style='font-size:10px; color:#000000; margin-top:3px;'>
-                Equipo de Protección Personal — Fecha: <strong>{$fechaFormat}</strong>
-            </div>
-            <div style='font-size:10px; color:#000000; margin-top:2px;'>
-                Bodega: <strong>{$nombreBodega}</strong>
-            </div>
-        </td>
-        <td style='width:22%; border:0.8px solid #000; padding:0; vertical-align:top;'>
-            <table width='100%' style='font-size:9px; border-collapse:collapse;'>
-                <tr>
-                    <td style='border-right:0.8px solid #000; border-bottom:0.8px solid #000;
-                                padding:3px 5px; font-weight:bold; color:#000000;'>Código:</td>
-                    <td style='border-bottom:0.8px solid #000; padding:3px 5px;
-                                text-align:center; color:#000000;'>
-                        SEAC-002-FICH
-                    </td>
-                </tr>
-                <tr>
-                    <td style='border-right:0.8px solid #000; border-bottom:0.8px solid #000;
-                                padding:3px 5px; font-weight:bold; color:#000000;'>Versión:</td>
-                    <td style='border-bottom:0.8px solid #000; padding:3px 5px;
-                                text-align:center; color:#000000;'>
-                        000
-                    </td>
-                </tr>
-                <tr>
-                    <td style='border-right:0.8px solid #000; padding:3px 5px;
-                                font-weight:bold; color:#000000;'>Vigencia:</td>
-                    <td style='padding:3px 5px; text-align:center; color:#000000;'>22/10/2025</td>
-                </tr>
-            </table>
-        </td>
-    </tr>
+<tr>
+    <td style='width:22%; border:0.8px solid #000; padding:6px 8px;'>
+        <table width='100%'>
+            <tr>
+                <td style='width:35%; text-align:left;'>
+                    <img src='{$logoalcaldia}' style='height:36px'>
+                </td>
+                <td style='width:65%; text-align:left; color:#000000;
+                            font-size:10px; font-weight:bold; line-height:1.3;'>
+                    SANTA ANA NORTE<br>EL SALVADOR
+                </td>
+            </tr>
+        </table>
+    </td>
+    <td style='width:56%; border-top:0.8px solid #000; border-bottom:0.8px solid #000;
+                padding:8px; text-align:center; vertical-align:middle;'>
+        <div style='font-size:14px; font-weight:bold; color:#000000; letter-spacing:1px;'>
+            REPORTE DE EXISTENCIAS DE E.P.P.
+        </div>
+        <div style='font-size:10px; color:#000000; margin-top:3px;'>
+            Equipo de Protección Personal — Fecha: <strong>{$fechaFormat}</strong>
+        </div>
+        <div style='font-size:10px; color:#000000; margin-top:2px;'>
+            Bodega: <strong>{$nombreBodega}</strong>
+        </div>
+    </td>
+    <td style='width:22%; border:0.8px solid #000; padding:0; vertical-align:top;'>
+        <table width='100%' style='font-size:9px; border-collapse:collapse;'>
+            <tr>
+                <td style='border-right:0.8px solid #000; border-bottom:0.8px solid #000;
+                            padding:3px 5px; font-weight:bold; color:#000000;'>Código:</td>
+                <td style='border-bottom:0.8px solid #000; padding:3px 5px;
+                            text-align:center; color:#000000;'>
+                    SEAC-002-FICH
+                </td>
+            </tr>
+            <tr>
+                <td style='border-right:0.8px solid #000; border-bottom:0.8px solid #000;
+                            padding:3px 5px; font-weight:bold; color:#000000;'>Versión:</td>
+                <td style='border-bottom:0.8px solid #000; padding:3px 5px;
+                            text-align:center; color:#000000;'>
+                    000
+                </td>
+            </tr>
+            <tr>
+                <td style='border-right:0.8px solid #000; padding:3px 5px;
+                            font-weight:bold; color:#000000;'>Vigencia:</td>
+                <td style='padding:3px 5px; text-align:center; color:#000000;'>22/10/2025</td>
+            </tr>
+        </table>
+    </td>
+</tr>
 </table>
 ";
 
@@ -463,26 +469,50 @@ class ReportesController extends Controller
                 return $item->oe_codigo . '|' . $item->oe_nombre;
             });
 
+            // ── Anchos de columnas según si se muestran Conteo/Diferencia ──
+            if ($mostrarColumnas) {
+                $wNum = '3%';  $wCod = '7%';  $wMat = '22%'; $wOe = '10%';
+                $wUni = '7%';  $wExi = '7%';  $wPre = '10%'; $wTot = '11%';
+                $wConteo = '12%'; $wDif = '11%';
+            } else {
+                $wNum = '4%';  $wCod = '9%';  $wMat = '30%'; $wOe = '14%';
+                $wUni = '9%';  $wExi = '9%';  $wPre = '12%'; $wTot = '13%';
+            }
+
+            // Las primeras 7 columnas (#, Código, Material, Obj. Específico, Unidad,
+            // Existencia, Precio Unit.) siempre van fijas antes de "Total".
+            $colspanLabel = 7;
+
             $tabla .= "
 <table width='100%' style='border-collapse:collapse; font-family:Arial, sans-serif; margin-top:8px;'>
     <thead>
         <tr>
             <th style='background:#f2f4f8; color:#000; font-size:9px; font-weight:bold;
-                        border:1px solid #000; padding:5px 3px; text-align:center; width:4%;'>#</th>
+                        border:1px solid #000; padding:{$padTh}; text-align:center; width:{$wNum};'>#</th>
             <th style='background:#f2f4f8; color:#000; font-size:9px; font-weight:bold;
-                        border:1px solid #000; padding:5px 3px; text-align:center; width:9%;'>Código</th>
+                        border:1px solid #000; padding:{$padTh}; text-align:center; width:{$wCod};'>Código</th>
             <th style='background:#f2f4f8; color:#000; font-size:9px; font-weight:bold;
-                        border:1px solid #000; padding:5px 3px; text-align:center; width:30%;'>Material</th>
+                        border:1px solid #000; padding:{$padTh}; text-align:center; width:{$wMat};'>Material</th>
             <th style='background:#f2f4f8; color:#000; font-size:9px; font-weight:bold;
-                        border:1px solid #000; padding:5px 3px; text-align:center; width:14%;'>Obj. Específico</th>
+                        border:1px solid #000; padding:{$padTh}; text-align:center; width:{$wOe};'>Obj. Específico</th>
             <th style='background:#f2f4f8; color:#000; font-size:9px; font-weight:bold;
-                        border:1px solid #000; padding:5px 3px; text-align:center; width:9%;'>Unidad</th>
+                        border:1px solid #000; padding:{$padTh}; text-align:center; width:{$wUni};'>Unidad</th>
             <th style='background:#f2f4f8; color:#000; font-size:9px; font-weight:bold;
-                        border:1px solid #000; padding:5px 3px; text-align:center; width:9%;'>Existencia</th>
+                        border:1px solid #000; padding:{$padTh}; text-align:center; width:{$wExi};'>Existencia</th>
             <th style='background:#f2f4f8; color:#000; font-size:9px; font-weight:bold;
-                        border:1px solid #000; padding:5px 3px; text-align:center; width:12%;'>Precio Unit. ($)</th>
+                        border:1px solid #000; padding:{$padTh}; text-align:center; width:{$wPre};'>Precio Unit. ($)</th>
             <th style='background:#f2f4f8; color:#000; font-size:9px; font-weight:bold;
-                        border:1px solid #000; padding:5px 3px; text-align:center; width:13%;'>Total ($)</th>
+                        border:1px solid #000; padding:{$padTh}; text-align:center; width:{$wTot};'>Total ($)</th>";
+
+            if ($mostrarColumnas) {
+                $tabla .= "
+            <th style='background:#f2f4f8; color:#000; font-size:9px; font-weight:bold;
+                        border:1px solid #000; padding:{$padTh}; text-align:center; width:{$wConteo};'>Conteo Físico</th>
+            <th style='background:#f2f4f8; color:#000; font-size:9px; font-weight:bold;
+                        border:1px solid #000; padding:{$padTh}; text-align:center; width:{$wDif};'>Diferencia</th>";
+            }
+
+            $tabla .= "
         </tr>
     </thead>
     <tbody>
@@ -490,6 +520,13 @@ class ReportesController extends Controller
 
             $cont = 1;
             $totalGeneral = 0;
+
+            // Celdas vacías extra al final de cada fila (conteo/diferencia)
+            $celdasExtra = $mostrarColumnas
+                ? "
+            <td style='border:1px solid #000; padding:{$padCelda}; text-align:center;'>&nbsp;</td>
+            <td style='border:1px solid #000; padding:{$padCelda}; text-align:center;'>&nbsp;</td>"
+                : "";
 
             foreach ($agrupado as $grupoKey => $items) {
 
@@ -502,35 +539,41 @@ class ReportesController extends Controller
 
                 foreach ($items as $item) {
                     $existencia = (int)$item->existencia;
-                    $valorReal = (float)($valoresPorMaterial[$item->id] ?? 0);
+                    $valorReal  = (float)($valoresPorMaterial[$item->id] ?? 0);
                     $precioUnit = $existencia > 0 ? ($valorReal / $existencia) : 0;
-                    $totalItem = $valorReal;
+                    $totalItem  = $valorReal;
                     $subtotalGrupo += $totalItem;
-                    $totalGeneral += $totalItem;
+                    $totalGeneral  += $totalItem;
 
                     $tabla .= "
         <tr>
-            <td style='border:1px solid #000; font-size:9px; padding:4px; text-align:center;'>{$cont}</td>
-            <td style='border:1px solid #000; font-size:9px; padding:4px; text-align:center;'>{$item->codigo}</td>
-            <td style='border:1px solid #000; font-size:9px; padding:4px;'>{$item->material}</td>
-            <td style='border:1px solid #000; font-size:9px; padding:4px; text-align:center;'>" . ($item->oe_codigo ?? '—') . "</td>
-            <td style='border:1px solid #000; font-size:9px; padding:4px; text-align:center;'>" . ($item->unidad ?? '—') . "</td>
-            <td style='border:1px solid #000; font-size:9px; padding:4px; text-align:center;'>{$existencia}</td>
-            <td style='border:1px solid #000; font-size:9px; padding:4px; text-align:right;'>
+            <td style='border:1px solid #000; font-size:9px; padding:{$padCelda}; text-align:center;'>{$cont}</td>
+            <td style='border:1px solid #000; font-size:9px; padding:{$padCelda}; text-align:center;'>{$item->codigo}</td>
+            <td style='border:1px solid #000; font-size:9px; padding:{$padCelda};'>{$item->material}</td>
+            <td style='border:1px solid #000; font-size:9px; padding:{$padCelda}; text-align:center;'>" . ($item->oe_codigo ?? '—') . "</td>
+            <td style='border:1px solid #000; font-size:9px; padding:{$padCelda}; text-align:center;'>" . ($item->unidad ?? '—') . "</td>
+            <td style='border:1px solid #000; font-size:9px; padding:{$padCelda}; text-align:center;'>{$existencia}</td>
+            <td style='border:1px solid #000; font-size:9px; padding:{$padCelda}; text-align:right;'>
                 \$ " . number_format($precioUnit, 2) . "
             </td>
-            <td style='border:1px solid #000; font-size:9px; padding:4px; text-align:right;'>
+            <td style='border:1px solid #000; font-size:9px; padding:{$padCelda}; text-align:right;'>
                 \$ " . number_format($totalItem, 2) . "
-            </td>
+            </td>{$celdasExtra}
         </tr>
 ";
                     $cont++;
                 }
 
                 // ── Subtotal por Objeto Específico ──
+                $celdasExtraSubtotal = $mostrarColumnas
+                    ? "
+            <td style='border:1px solid #000; padding:{$padCelda}; background:#f2f4f8;'>&nbsp;</td>
+            <td style='border:1px solid #000; padding:{$padCelda}; background:#f2f4f8;'>&nbsp;</td>"
+                    : "";
+
                 $tabla .= "
         <tr>
-            <td colspan='7' style='border:1px solid #000; padding:5px 8px; text-align:right;
+            <td colspan='{$colspanLabel}' style='border:1px solid #000; padding:5px 8px; text-align:right;
                                     font-size:9px; font-weight:bold;
                                     background:#f2f4f8; color:#000;'>
                 SUBTOTAL — {$oeLabel}
@@ -539,16 +582,22 @@ class ReportesController extends Controller
                         font-size:9px; font-weight:bold;
                         background:#f2f4f8; color:#000;'>
                 \$ " . number_format($subtotalGrupo, 2) . "
-            </td>
+            </td>{$celdasExtraSubtotal}
         </tr>
 ";
             }
+
+            $celdasExtraTotal = $mostrarColumnas
+                ? "
+            <td style='border:1px solid #000; padding:7px; background:#f9fafb;'>&nbsp;</td>
+            <td style='border:1px solid #000; padding:7px; background:#f9fafb;'>&nbsp;</td>"
+                : "";
 
             $tabla .= "
     </tbody>
     <tfoot>
         <tr>
-            <td colspan='7' style='border:1px solid #000; padding:7px 8px; text-align:right;
+            <td colspan='{$colspanLabel}' style='border:1px solid #000; padding:7px 8px; text-align:right;
                                     font-size:11px; font-weight:bold;
                                     background:#f9fafb; color:#000; letter-spacing:.5px;'>
                 TOTAL GENERAL
@@ -557,7 +606,7 @@ class ReportesController extends Controller
                         font-size:12px; font-weight:bold;
                         background:#f9fafb; color:#000;'>
                 \$ " . number_format($totalGeneral, 2) . "
-            </td>
+            </td>{$celdasExtraTotal}
         </tr>
     </tfoot>
 </table>
@@ -571,6 +620,8 @@ class ReportesController extends Controller
         $mpdf->WriteHTML($tabla, 2);
         $mpdf->Output();
     }
+
+
 
 
     public function reportePDFInicialPorPeriodos($desde, $hasta, $bodega = 0)
