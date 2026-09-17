@@ -92,6 +92,28 @@
                                 </div>
                             </div>
                         </div>
+
+                        {{-- ── NUEVO: Fila de búsqueda por material ── --}}
+                        <div class="row align-items-end mt-2">
+                            <div class="col-md-6">
+                                <div class="form-group mb-0">
+                                    <label class="font-weight-bold">
+                                        <i class="fas fa-box mr-1 text-muted"></i> Buscar por material (nombre)
+                                    </label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="filtro-material"
+                                           placeholder="Ej: cemento, MAT-001 ...">
+                                </div>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <small class="text-muted">
+                                    Filtra las salidas que contengan ese material en su detalle.
+                                </small>
+                            </div>
+                        </div>
+                        {{-- ── FIN NUEVO ── --}}
+
                     </div>
                 </div>
             </div>
@@ -257,6 +279,7 @@
                             <tr>
                                 <th style="width:5%">#</th>
                                 <th>Material</th>
+                                <th class="text-center" style="width:10%">Unidad</th>
                                 <th class="text-center" style="width:12%">Cantidad</th>
                                 <th class="text-right" style="width:14%">Precio Unit.</th>
                                 <th class="text-center" style="width:10%">Quitar</th>
@@ -373,7 +396,6 @@
             if (!idDistrito) {
                 resetSelect('#select-unidad-editar',   '— Seleccionar distrito primero —', false, s2optsEditar());
                 resetSelect('#select-empleado-editar', '— Seleccionar unidad primero —',   false, s2optsEditar());
-                // ── FIX: siempre cerrar loading si no hay distrito ──
                 closeLoading();
                 return;
             }
@@ -393,16 +415,13 @@
                         $s.select2(s2optsEditar());
 
                         if (idUnidadPre) {
-                            // La cadena continúa → buscarEmpleadoEditar cerrará el loading
                             buscarEmpleadoEditar(idEmpleadoPre, silencioso);
                         } else {
                             resetSelect('#select-empleado-editar', '— Seleccionar unidad primero —', false, s2optsEditar());
-                            // ── FIX: fin de cadena, cerrar loading aquí ──
                             closeLoading();
                         }
                     } else {
                         toastr.error('No se encontraron unidades');
-                        // ── FIX: también en el else ──
                         closeLoading();
                     }
                 })
@@ -421,8 +440,6 @@
                 return;
             }
 
-            // silencioso = true cuando viene del pre-carga al abrir modal,
-            // así no hace doble openLoading
             if (!silencioso) openLoading();
 
             axios.post(urlAdmin + '/admin/empleados/buscarunidad-empleado/reporte', { id: idUnidad })
@@ -439,7 +456,6 @@
                     } else {
                         toastr.error('No se encontraron empleados');
                     }
-                    // ── FIX: fin de cadena, siempre cerrar aquí ──
                     closeLoading();
                 })
                 .catch(function () {
@@ -470,15 +486,12 @@
                         $('#modalEditar').modal('show');
 
                         if (s.id_distrito) {
-                            // Tiene distrito → la cadena cascada cerrará el loading
                             $('#select-distrito-editar').val(s.id_distrito).trigger('change.select2');
                             buscarUnidadEditar(s.id_unidad_empleado, s.id_empleado, true);
                         } else {
-                            // Sin distrito → cerrar loading aquí directamente
                             closeLoading();
                         }
                     } else {
-                        // ── FIX: error en respuesta → cerrar loading ──
                         closeLoading();
                         toastr.error('No se pudo cargar la información.');
                     }
@@ -589,8 +602,6 @@
                 success: function (html) {
                     $('#tablaDatatable').html(html);
                     initDataTable();
-                    // ── FIX: el partial ya llama closeLoading() con setTimeout,
-                    //         pero si falla el setTimeout lo cubrimos aquí también ──
                 },
                 error: function () {
                     closeLoading();
@@ -606,6 +617,7 @@
                 id_empleado:  $('#select-empleado-filtro').val() || '',
                 fecha_desde:  $('#fecha-desde-filtro').val()     || '',
                 fecha_hasta:  $('#fecha-hasta-filtro').val()     || '',
+                material:     $('#filtro-material').val().trim() || '', // ── NUEVO ──
                 buscar_todos: '1'
             });
         }
@@ -614,6 +626,7 @@
             $('#select-empleado-filtro').val('').trigger('change');
             $('#fecha-desde-filtro').val('');
             $('#fecha-hasta-filtro').val('');
+            $('#filtro-material').val(''); // ── NUEVO ──
             $('#tablaDatatable').html(
                 '<div class="text-center text-muted py-5">' +
                 '<i class="fas fa-filter fa-2x mb-2 d-block"></i>' +
@@ -677,8 +690,7 @@
                     $('#detalle-loading').hide();
                     if (r.data.success === 1 && r.data.detalle.length > 0) {
 
-                        // ── Verificar mes actual usando la fecha que devuelve el servidor ──
-                        var esMesActual = r.data.es_mes_actual; // true/false desde backend
+                        var esMesActual = r.data.es_mes_actual;
 
                         var html = '';
                         r.data.detalle.forEach(function (fila, i) {
@@ -691,6 +703,7 @@
                             html += '<tr>' +
                                 '<td>' + (i + 1) + '</td>' +
                                 '<td>' + fila.material + '</td>' +
+                                '<td class="text-center">' + (fila.unidad ?? '—') + '</td>' +
                                 '<td class="text-center">' + fila.cantidad_salida + '</td>' +
                                 '<td class="text-right">$' + fila.precio + '</td>' +
                                 '<td class="text-center">' + btnBorrar + '</td>' +

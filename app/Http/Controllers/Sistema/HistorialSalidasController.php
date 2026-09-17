@@ -51,6 +51,16 @@ class HistorialSalidasController extends Controller
             $query->whereDate('fecha', '<=', $request->fecha_hasta);
         }
 
+        // ── NUEVO: filtro por material (nombre o código) ──────────────
+        if ($request->filled('material')) {
+            $busqueda = '%' . $request->material . '%';
+            $query->whereHas('detalles.entradaDetalle.material', function ($q2) use ($busqueda) {
+                $q2->where('nombre', 'LIKE', $busqueda)
+                    ->orWhere('codigo', 'LIKE', $busqueda);
+            });
+        }
+        // ───────────────────────────────────────────────────────────
+
         $arraySalidas = $query->orderBy('fecha', 'desc')
             ->get()
             ->map(function ($item) {
@@ -234,6 +244,7 @@ class HistorialSalidasController extends Controller
                 return [
                     'id_detalle'      => $item->id,
                     'material'        => $item->entradaDetalle->material->nombre ?? '—',
+                    'unidad'          => $item->entradaDetalle->material->unidadMedida->nombre ?? '—',
                     'cantidad_salida' => $item->cantidad_salida,
                     'precio'          => number_format($item->entradaDetalle->precio ?? 0, 4),
                 ];

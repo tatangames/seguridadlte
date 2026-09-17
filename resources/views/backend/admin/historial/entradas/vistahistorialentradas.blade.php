@@ -9,6 +9,7 @@
 @section('plugins.Datatables', true)
 @section('plugins.DatatablesPlugins', true)
 @section('plugins.Sweetalert2', true)
+@section('plugins.Select2', true)
 
 @include('backend.urlglobal')
 
@@ -43,6 +44,86 @@
 
     <div id="divcontenedor">
 
+        {{-- ══ FILTROS ══ --}}
+        <section class="content">
+            <div class="container-fluid">
+                <div class="card card-outline card-secondary">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-filter mr-1"></i> Filtros</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Proveedor</label>
+                                    <select id="select-proveedor-filtro" class="form-control" style="width:100%">
+                                        <option value="">— Todos —</option>
+                                        @foreach($arrayProveedor as $p)
+                                            <option value="{{ $p->id }}">{{ $p->nombre }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label>Factura / Lote</label>
+                                    <input type="text" id="filtro-lote" class="form-control"
+                                           placeholder="Ej: FAC-0001">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label>Fecha desde</label>
+                                    <input type="date" id="fecha-desde-filtro" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label>Fecha hasta</label>
+                                    <input type="date" id="fecha-hasta-filtro" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <div class="form-group mb-0" style="width:100%">
+                                    <button type="button" class="btn btn-primary btn-block" onclick="buscarConFiltros()">
+                                        <i class="fas fa-search mr-1"></i> Buscar
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-block mt-1" onclick="limpiarFiltros()">
+                                        <i class="fas fa-eraser mr-1"></i> Limpiar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row align-items-end mt-2">
+                            <div class="col-md-6">
+                                <div class="form-group mb-0">
+                                    <label class="font-weight-bold">
+                                        <i class="fas fa-box mr-1 text-muted"></i> Buscar por material (nombre)
+                                    </label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="filtro-material"
+                                           placeholder="Ej: cemento, MAT-001 ...">
+                                </div>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <small class="text-muted">
+                                    Filtra las entradas que contengan ese material en su detalle.
+                                </small>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
         {{-- ══ TABLA ══ --}}
         <section class="content">
             <div class="container-fluid">
@@ -53,7 +134,12 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-12">
-                                <div id="tablaDatatable"></div>
+                                <div id="tablaDatatable">
+                                    <div class="text-center text-muted py-5">
+                                        <i class="fas fa-filter fa-2x mb-2 d-block"></i>
+                                        <p>Selecciona al menos un filtro y presiona <b>Buscar</b> para ver resultados.</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -132,6 +218,7 @@
                             <tr>
                                 <th>#</th>
                                 <th>Material</th>
+                                <th class="text-center">Unidad</th>
                                 <th class="text-center">Cantidad</th>
                                 <th class="text-right">Precio Unit.</th>
                                 <th class="text-center">Acciones</th>
@@ -204,6 +291,13 @@
     <script>
         $(function () {
 
+            // ── Select2 proveedor filtro ─────────────────────────────
+            $('#select-proveedor-filtro').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                language: { noResults: function () { return 'No encontrado'; } },
+            });
+
             // ── Select2 proveedor en modal editar ───────────────────
             $('#select-proveedor-editar').select2({
                 theme: 'bootstrap-5',
@@ -254,15 +348,50 @@
                 $('#tabla_filter input').addClass('form-control form-control-sm').css('display', 'inline-block');
             }
 
-            function cargarTabla() {
-                const ruta = "{{ url('/admin/historial/entradas/tabla') }}";
+            // ── Filtros y carga de tabla ──────────────────────────────
+            function cargarTablaConFiltros(filtros) {
                 openLoading();
-                $('#tablaDatatable').load(ruta, function () {
-                    initDataTable();
+                $.ajax({
+                    url: "{{ url('/admin/historial/entradas/tabla') }}",
+                    method: 'POST',
+                    data: { _token: "{{ csrf_token() }}", ...filtros },
+                    success: function (html) {
+                        $('#tablaDatatable').html(html);
+                        initDataTable();
+                    },
+                    error: function () {
+                        closeLoading();
+                        toastr.error('Error al cargar la tabla');
+                    }
                 });
             }
 
-            window.recargar = function () { cargarTabla(); };
+            window.recargar = function () { buscarConFiltros(); };
+
+            window.buscarConFiltros = function () {
+                cargarTablaConFiltros({
+                    id_proveedor: $('#select-proveedor-filtro').val() || '',
+                    lote:         $('#filtro-lote').val().trim()      || '',
+                    fecha_desde:  $('#fecha-desde-filtro').val()      || '',
+                    fecha_hasta:  $('#fecha-hasta-filtro').val()      || '',
+                    material:     $('#filtro-material').val().trim() || '',
+                    buscar_todos: '1'
+                });
+            };
+
+            window.limpiarFiltros = function () {
+                $('#select-proveedor-filtro').val('').trigger('change');
+                $('#filtro-lote').val('');
+                $('#fecha-desde-filtro').val('');
+                $('#fecha-hasta-filtro').val('');
+                $('#filtro-material').val('');
+                $('#tablaDatatable').html(
+                    '<div class="text-center text-muted py-5">' +
+                    '<i class="fas fa-filter fa-2x mb-2 d-block"></i>' +
+                    '<p>Selecciona al menos un filtro y presiona <b>Buscar</b> para ver resultados.</p>' +
+                    '</div>'
+                );
+            };
 
             // Delegación botones detalle
             $(document).on('click', '.btn-editar-detalle', function () {
@@ -274,7 +403,7 @@
                 eliminarDetalle(b.data('id'), b.data('material'));
             });
 
-            cargarTabla();
+            // Ya NO se carga la tabla automáticamente al entrar.
         });
 
         // ── Editar cabecera ─────────────────────────────────────────
@@ -399,6 +528,7 @@
                             html += `<tr>
                             <td>${i+1}</td>
                             <td>${fila.material}</td>
+                            <td class="text-center">${fila.unidad ?? '—'}</td>
                             <td class="text-center">${fila.cantidad_inicial}</td>
                             <td class="text-right">$${fila.precio}</td>
                             <td class="text-center text-nowrap">${botones}</td>

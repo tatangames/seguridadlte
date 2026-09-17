@@ -20,13 +20,48 @@ class HistorialController extends Controller
 {
     public function indexHistorialEntradas()
     {
-        return view('backend.admin.historial.entradas.vistahistorialentradas');
+        $arrayProveedor = Proveedor::orderBy('nombre', 'ASC')->get();
+
+        return view('backend.admin.historial.entradas.vistahistorialentradas', compact('arrayProveedor'));
     }
 
     public function tablaHistorialEntradas(Request $request)
     {
-        $arrayEntradas = Entradas::with(['proveedor', 'bodega', 'detalle'])
-            ->orderBy('fecha', 'desc')
+        // Sin filtros -> muestra la instrucción, igual que en Salidas
+        if (!$request->filled('buscar_todos')) {
+            $arrayEntradas = collect();
+            return view('backend.admin.historial.entradas.tablahistorialentradas',
+                compact('arrayEntradas'));
+        }
+
+        $query = Entradas::with(['proveedor', 'bodega', 'detalle']);
+
+        if ($request->filled('id_proveedor')) {
+            $query->where('id_proveedor', $request->id_proveedor);
+        }
+
+        if ($request->filled('lote')) {
+            $query->where('lote', 'LIKE', '%' . $request->lote . '%');
+        }
+
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('fecha', '>=', $request->fecha_desde);
+        }
+
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('fecha', '<=', $request->fecha_hasta);
+        }
+
+        // ── Filtro por material (nombre) ──────────────────────────────
+        if ($request->filled('material')) {
+            $busqueda = '%' . $request->material . '%';
+            $query->whereHas('detalle.material', function ($q2) use ($busqueda) {
+                $q2->where('nombre', 'LIKE', $busqueda);
+            });
+        }
+        // ───────────────────────────────────────────────────────────
+
+        $arrayEntradas = $query->orderBy('fecha', 'desc')
             ->get()
             ->map(function ($item) {
                 $item->fecha_fmt    = date('d/m/Y', strtotime($item->fecha));
@@ -137,12 +172,13 @@ class HistorialController extends Controller
         }
 
         $detalle = $entrada->detalle()
-            ->with('material')
+            ->with('material.unidadMedida') // ── NUEVO: eager load unidadMedida ──
             ->get()
             ->map(function ($item) {
                 return [
                     'id'               => $item->id,
                     'material'         => $item->material->nombre ?? '',
+                    'unidad'           => $item->material->unidadMedida->nombre ?? '—', // ── NUEVO ──
                     'cantidad_inicial' => $item->cantidad_inicial,
                     'precio'           => number_format($item->precio, 4),
                     'precio_raw'       => $item->precio,

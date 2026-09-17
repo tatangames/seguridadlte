@@ -178,7 +178,7 @@ Route::middleware('auth:admin')->group(function () {
 
     // --- HISTORIAL / ENTRADAS ---
     Route::get('/admin/historial/entradas', [HistorialController::class,'indexHistorialEntradas'])->name('admin.historial.entradas.index');
-    Route::get('/admin/historial/entradas/tabla',  [HistorialController::class,'tablaHistorialEntradas']);
+    Route::post('/admin/historial/entradas/tabla', [HistorialController::class,'tablaHistorialEntradas']);
     Route::post('/admin/historial/entradas/informacion', [HistorialController::class, 'informacionEntrada']);
     Route::post('/admin/historial/entradas/editar',      [HistorialController::class, 'editarEntrada']);
     Route::post('/admin/historial/entradas/eliminar',    [HistorialController::class, 'eliminarEntrada']);
