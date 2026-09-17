@@ -27,7 +27,7 @@ class Salidas extends Model
 
     public function detalle()
     {
-        return $this->hasMany(SalidasDetalle::class, 'id_salidas');
+        return $this->hasMany(SalidasDetalle::class, 'id_salida');
     }
 
     public function empleado()

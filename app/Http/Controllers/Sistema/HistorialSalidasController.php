@@ -54,7 +54,7 @@ class HistorialSalidasController extends Controller
         // ── NUEVO: filtro por material (nombre o código) ──────────────
         if ($request->filled('material')) {
             $busqueda = '%' . $request->material . '%';
-            $query->whereHas('detalles.entradaDetalle.material', function ($q2) use ($busqueda) {
+            $query->whereHas('detalle.entradaDetalle.material', function ($q2) use ($busqueda) {
                 $q2->where('nombre', 'LIKE', $busqueda)
                     ->orWhere('codigo', 'LIKE', $busqueda);
             });
