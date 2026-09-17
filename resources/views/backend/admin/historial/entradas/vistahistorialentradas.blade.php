@@ -572,14 +572,29 @@
             axios.post(urlAdmin + '/admin/historial/entradas/detalle/editar', fd)
                 .then((response) => {
                     closeLoading();
-                    if (response.data.success === 1) {
-                        toastr.success('Actualizado correctamente');
-                        $('#modalEditarDetalle').modal('hide');
-                        const entradaId = $('#detalle-id-editar').data('entrada-id');
-                        const lote      = $('#detalle-lote').text();
-                        const fecha     = $('#detalle-fecha').text();
-                        verDetalle(entradaId, lote, fecha);
-                    } else { toastr.error('Error al actualizar'); }
+                    switch (response.data.success) {
+                        case 1:
+                            toastr.success('Actualizado correctamente');
+                            $('#modalEditarDetalle').modal('hide');
+                            const entradaId = $('#detalle-id-editar').data('entrada-id');
+                            const lote      = $('#detalle-lote').text();
+                            const fecha     = $('#detalle-fecha').text();
+                            verDetalle(entradaId, lote, fecha);
+                            break;
+                        case 4:
+                            Swal.fire({
+                                title: 'Cantidad inválida',
+                                text: response.data.msg || 'No se puede reducir por debajo de lo ya utilizado.',
+                                type: 'warning',
+                                confirmButtonText: 'Entendido'
+                            });
+                            break;
+                        case 0:
+                            toastr.error('El material no existe');
+                            break;
+                        default:
+                            toastr.error('Error al actualizar');
+                    }
                 })
                 .catch(() => { closeLoading(); toastr.error('Error al actualizar'); });
         }

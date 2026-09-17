@@ -199,7 +199,20 @@ class HistorialController extends Controller
             return response()->json(['success' => 0]);
         }
 
-        $detalle->cantidad_inicial = $request->cantidad;
+        $cantidadSolicitada = (int) $request->cantidad;
+
+        // Total ya consumido en salidas para este material de esta entrada
+        $totalUsado = SalidasDetalle::where('id_entrada_detalle', $detalle->id)
+            ->sum('cantidad_salida');
+
+        if ($cantidadSolicitada < $totalUsado) {
+            return response()->json([
+                'success' => 4,
+                'msg'     => "No se puede asignar una cantidad menor a la ya utilizada en salidas ({$totalUsado} unidades ya salieron).",
+            ]);
+        }
+
+        $detalle->cantidad_inicial = $cantidadSolicitada;
         $detalle->precio           = $request->precio;
         $detalle->save();
 
