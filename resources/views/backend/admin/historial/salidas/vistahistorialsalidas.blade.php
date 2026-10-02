@@ -93,7 +93,7 @@
                             </div>
                         </div>
 
-                        {{-- ── NUEVO: Fila de búsqueda por material ── --}}
+                        {{-- Fila de búsqueda por material --}}
                         <div class="row align-items-end mt-2">
                             <div class="col-md-6">
                                 <div class="form-group mb-0">
@@ -112,7 +112,6 @@
                                 </small>
                             </div>
                         </div>
-                        {{-- ── FIN NUEVO ── --}}
 
                     </div>
                 </div>
@@ -125,8 +124,6 @@
                 <div class="card card-primary">
                     <div class="card-header">
                         <h3 class="card-title">Listado de Salidas</h3>
-                        <br>
-                        <p style="color: white">Solo podra borrar y editar del MES ACTUAL, ya anteriores no deberia ser modificados</p>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -617,7 +614,7 @@
                 id_empleado:  $('#select-empleado-filtro').val() || '',
                 fecha_desde:  $('#fecha-desde-filtro').val()     || '',
                 fecha_hasta:  $('#fecha-hasta-filtro').val()     || '',
-                material:     $('#filtro-material').val().trim() || '', // ── NUEVO ──
+                material:     $('#filtro-material').val().trim() || '',
                 buscar_todos: '1'
             });
         }
@@ -626,7 +623,7 @@
             $('#select-empleado-filtro').val('').trigger('change');
             $('#fecha-desde-filtro').val('');
             $('#fecha-hasta-filtro').val('');
-            $('#filtro-material').val(''); // ── NUEVO ──
+            $('#filtro-material').val('');
             $('#tablaDatatable').html(
                 '<div class="text-center text-muted py-5">' +
                 '<i class="fas fa-filter fa-2x mb-2 d-block"></i>' +
@@ -690,15 +687,12 @@
                     $('#detalle-loading').hide();
                     if (r.data.success === 1 && r.data.detalle.length > 0) {
 
-                        var esMesActual = r.data.es_mes_actual;
-
                         var html = '';
                         r.data.detalle.forEach(function (fila, i) {
-                            var btnBorrar = esMesActual
-                                ? '<button type="button" class="btn btn-danger btn-xs" ' +
+                            var btnBorrar =
+                                '<button type="button" class="btn btn-danger btn-xs" ' +
                                 'onclick="confirmarEliminarItem(' + fila.id_detalle + ',' + r.data.detalle.length + ')">' +
-                                '<i class="fas fa-trash"></i></button>'
-                                : '<span class="text-muted" title="Solo se puede eliminar en el mes actual">—</span>';
+                                '<i class="fas fa-trash"></i></button>';
 
                             html += '<tr>' +
                                 '<td>' + (i + 1) + '</td>' +

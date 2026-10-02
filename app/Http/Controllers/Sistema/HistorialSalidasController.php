@@ -5,18 +5,13 @@ namespace App\Http\Controllers\Sistema;
 use App\Http\Controllers\Controller;
 use App\Models\Distrito;
 use App\Models\Empleado;
-use App\Models\Entradas;
 use App\Models\EntradasDetalle;
-use App\Models\InformacionGeneral;
-use App\Models\Materiales;
-use App\Models\Proveedor;
 use App\Models\Salidas;
 use App\Models\SalidasDetalle;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
 
 class HistorialSalidasController extends Controller
 {
@@ -51,7 +46,7 @@ class HistorialSalidasController extends Controller
             $query->whereDate('fecha', '<=', $request->fecha_hasta);
         }
 
-        // ── NUEVO: filtro por material (nombre o código) ──────────────
+        // Filtro por material (nombre o código)
         if ($request->filled('material')) {
             $busqueda = '%' . $request->material . '%';
             $query->whereHas('detalle.entradaDetalle.material', function ($q2) use ($busqueda) {
@@ -59,7 +54,6 @@ class HistorialSalidasController extends Controller
                     ->orWhere('codigo', 'LIKE', $busqueda);
             });
         }
-        // ───────────────────────────────────────────────────────────
 
         $arraySalidas = $query->orderBy('fecha', 'desc')
             ->get()
@@ -130,19 +124,6 @@ class HistorialSalidasController extends Controller
             return response()->json(['success' => 0]);
         }
 
-        // ── Validar mes actual ──────────────────────────────────────────
-        $fechaNueva  = Carbon::parse($request->fecha);
-        $ahora       = Carbon::now();
-        $esMesActual = $fechaNueva->month === $ahora->month
-            && $fechaNueva->year  === $ahora->year;
-
-        if (!$esMesActual) {
-            return response()->json([
-                'success' => 0,
-                'msg'     => 'Solo se pueden editar salidas del mes actual.',
-            ]);
-        }
-
         // ── Validar que la fecha no sea anterior al ingreso de algún ítem ──
         $entradaConflicto = DB::table('salidas_detalle as sd')
             ->join('entradas_detalle as ed', 'ed.id', '=', 'sd.id_entrada_detalle')
@@ -210,23 +191,20 @@ class HistorialSalidasController extends Controller
             return response()->json(['success' => 0]);
         }
 
-        // ── Validar mes actual ──────────────────────────────────────────
-        $ahora       = Carbon::now();
-        $fechaSalida = Carbon::parse($salida->fecha);
-        $esMesActual = $fechaSalida->month === $ahora->month
-            && $fechaSalida->year  === $ahora->year;
+        DB::beginTransaction();
 
-        if (!$esMesActual) {
-            return response()->json([
-                'success' => 0,
-                'msg'     => 'Solo se pueden eliminar salidas del mes actual.',
-            ]);
+        try {
+            SalidasDetalle::where('id_salida', $salida->id)->delete();
+            $salida->delete();
+
+            DB::commit();
+            return response()->json(['success' => 1]);
+
+        } catch (\Throwable $e) {
+            Log::error('eliminarSalida: ' . $e);
+            DB::rollback();
+            return response()->json(['success' => 99]);
         }
-
-        SalidasDetalle::where('id_salida', $salida->id)->delete();
-        $salida->delete();
-
-        return response()->json(['success' => 1]);
     }
 
     public function detalleSalida(Request $request)
@@ -250,16 +228,9 @@ class HistorialSalidasController extends Controller
                 ];
             });
 
-        // ── Verificar mes actual comparando enteros (evita desfase de zona horaria) ──
-        $ahora       = Carbon::now();
-        $fechaSalida = Carbon::parse($salida->fecha);
-        $esMesActual = $fechaSalida->month === $ahora->month
-            && $fechaSalida->year  === $ahora->year;
-
         return response()->json([
-            'success'       => 1,
-            'detalle'       => $detalle,
-            'es_mes_actual' => $esMesActual,
+            'success' => 1,
+            'detalle' => $detalle,
         ]);
     }
 
@@ -352,19 +323,6 @@ class HistorialSalidasController extends Controller
 
         if (!$salida) {
             return response()->json(['success' => 0]);
-        }
-
-        // ── Validar mes actual en el servidor (fuente de verdad real) ──
-        $ahora       = Carbon::now();
-        $fechaSalida = Carbon::parse($salida->fecha);
-        $esMesActual = $fechaSalida->month === $ahora->month
-            && $fechaSalida->year  === $ahora->year;
-
-        if (!$esMesActual) {
-            return response()->json([
-                'success' => 0,
-                'msg'     => 'Solo se pueden eliminar ítems del mes actual.',
-            ]);
         }
 
         $idSalida = $detalle->id_salida;
